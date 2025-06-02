@@ -6,7 +6,7 @@ from printer import find_compatible_printers, print_image
 from sounds import play_success, play_error
 
 
-class LabelPrinterApp:
+class scanToPrint:
     def __init__(self, root):
         self.root = root
         self.root.title("Label Printer")

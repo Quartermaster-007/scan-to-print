@@ -1,7 +1,7 @@
 import tkinter as tk
-from gui import LabelPrinterApp
+from gui import scanToPrint
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = LabelPrinterApp(root)
+    app = scanToPrint(root)
     root.mainloop()
