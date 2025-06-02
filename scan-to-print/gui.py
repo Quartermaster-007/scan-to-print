@@ -9,7 +9,7 @@ from sounds import play_success, play_error
 class scanToPrint:
     def __init__(self, root):
         self.root = root
-        self.root.title("Label Printer")
+        self.root.title("scan-to-print")
 
         self.records = {}
         self.csv_path = ""
