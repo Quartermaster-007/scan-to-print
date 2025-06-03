@@ -12,5 +12,5 @@ def load_config():
 
 def save_config(csv_path, printer_name):
     with open(CONFIG_FILE, 'w') as f:
-        f.write(f"CSV_FILE = {csv_path}\n")
+        #f.write(f"CSV_FILE = {csv_path}\n")
         f.write(f"PRINTER = {printer_name}\n")

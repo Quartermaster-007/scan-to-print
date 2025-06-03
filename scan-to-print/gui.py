@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from config import load_config, save_config
-from csv_handler import load_csv
+#from csv_handler import load_csv
 from printer import find_compatible_printers, print_image
 from sounds import play_success, play_error
 
@@ -12,16 +12,18 @@ class scanToPrint:
         self.root.title("scan-to-print")
 
         self.records = {}
-        self.csv_path = ""
+        #self.csv_path = ""
         self.printer_name = ""
 
         self.setup_ui()
         self.load_config()
 
     def setup_ui(self):
+        '''
         tk.Label(self.root, text="CSV File:").grid(row=0, column=0, sticky='e')
         self.csv_button = tk.Button(self.root, text="Select CSV", command=self.select_csv)
         self.csv_button.grid(row=0, column=1, sticky='w')
+        '''
 
         tk.Label(self.root, text="Printer:").grid(row=1, column=0, sticky='e')
         self.printer_button = tk.Button(self.root, text="Select Printer", command=self.select_printer)
@@ -52,11 +54,13 @@ class scanToPrint:
 
     def load_config(self):
         config = load_config()
+        '''
         if 'CSV_FILE' in config and config['CSV_FILE']:
             use = messagebox.askyesno("Use Saved CSV", f"Use last CSV file?\n{config['CSV_FILE']}")
             if use:
                 self.csv_path = config['CSV_FILE']
                 self.load_csv()
+        '''
         if 'PRINTER' in config and config['PRINTER']:
             use = messagebox.askyesno("Use Saved Printer", f"Use last printer?\n{config['PRINTER']}")
             if use:
@@ -64,8 +68,10 @@ class scanToPrint:
                 self.log(f"Using saved printer: {self.printer_name}")
 
     def save_config(self):
-        save_config(self.csv_path, self.printer_name)
+        #save_config(self.csv_path, self.printer_name)
+        save_config(self.printer_name)
 
+    '''
     def select_csv(self):
         path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if path:
@@ -86,6 +92,7 @@ class scanToPrint:
             self.load_csv()
         else:
             self.select_csv()
+    '''
 
     def select_printer(self):
         compatible = find_compatible_printers()
