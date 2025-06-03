@@ -27,7 +27,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --icon=images/scan-to-print.ico app.py
+          pyinstaller --noconfirm --onefile --windowed --icon=images/scan-to-print.ico scan-to-print/app.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
