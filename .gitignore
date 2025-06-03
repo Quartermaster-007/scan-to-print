@@ -19,3 +19,9 @@ venv/
 # Config files
 scan-to-print/config.txt
 config.txt
+
+# Build files
+
+build/
+dist/
+*.spec
