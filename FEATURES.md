@@ -4,12 +4,15 @@ Fill in the details under each feature before work begins. Leave a section blank
 
 ---
 
-## Current state (as of initial build)
+## Current state
 
 The core app is fully working:
 - Folder selection, printer selection, barcode input (USB scanner or keyboard)
 - Finds matching file by barcode name, disambiguates if multiple extensions exist
 - Prints via Windows ShellExecute
+- Persistent settings in `%APPDATA%\ScanToPrint\settings.json` (#3 ✅)
+- Global keyboard listener (pynput) with timing-based barcode detection (#10 ✅)
+- Pause/resume toggle + scanner speed check with auto-calibration (#10 ✅)
 
 ---
 
@@ -50,7 +53,7 @@ Play a sound or flash the window when a scan succeeds or fails — useful in noi
 
 ---
 
-## Feature 3 — Persistent settings
+## Feature 3 — Persistent settings ✅ Implemented
 
 Remember the last-used folder and printer between sessions so the user doesn't have to reconfigure on every launch.
 
@@ -66,6 +69,13 @@ Remember the last-used folder and printer between sessions so the user doesn't h
 Settings to store, based on the core functionallity and not including any new features:
 - Window size
 - Last used folder and printer
+
+**Implementation notes:**
+- `settings.py` reads/writes `%APPDATA%\ScanToPrint\settings.json`
+- Keys: `folder`, `printer`, `window_width`, `window_height`, `auto_scan`, `threshold_ms`
+- Printer auto-selection order: saved → Windows default → first in list
+- File menu added with "Open settings file" (opens in default editor) and "Exit"
+- Window size is restored on startup; saved on close
 
 
 ---
@@ -177,7 +187,7 @@ The logic for selecting the printer should be:
 
 ---
 
-## Feature 10 — Auto scan-to-print
+## Feature 10 — Auto scan-to-print ✅ Implemented
 
 The app should monitor input from the barcode scanner and attempt to print any document that matches its input. No need to first highlight the input box and therefore also work when the app is minimized to the system tray.
 
@@ -185,6 +195,14 @@ The app should monitor input from the barcode scanner and attempt to print any d
 - Use timing-based detection to distinguish barcode scanner input from regular keyboard typing.
 
 **Implementation note:** Use `pynput` to install a global keyboard listener (works even when the app has no focus / is in the tray). Barcode scanners send all characters within ~50ms followed by Enter; human typing is much slower. The listener accumulates keystrokes and measures inter-key delay — if a sequence ends with Enter and all characters arrived within the threshold, it is treated as a barcode scan. Regular keyboard input is ignored. The pause/resume toggle in the tray menu (Feature 7) will enable/disable this listener.
+
+**Implementation notes:**
+- `scanner.py` — `BarcodeScanner` class wraps a `pynput.keyboard.Listener` in a daemon thread; configurable `threshold_ms` (default 100ms); `MIN_LENGTH = 3` to ignore stray Enter presses; fires callback via `root.after(0, ...)` for thread safety
+- Scanner menu in menubar: "Pause / Resume auto-scan" toggle + "Speed check…"
+- `●` green/grey dot indicator with "Auto-scan" label shows current state
+- `speedcheck.py` — modal window that measures actual scanner inter-key timing and suggests a threshold with 50% margin (min +20ms), rounded to 10ms; Apply & Save / Reset to Default / Close
+- `auto_scan` and `threshold_ms` both persisted in `settings.json`
+- `test_scan.py` — injects keystrokes via `pynput.keyboard.Controller` at 20ms intervals for testing without hardware
 
 ---
 
