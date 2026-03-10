@@ -13,6 +13,8 @@ _DEFAULTS = {
     "printer": "",
     "window_width": 0,
     "window_height": 0,
+    "auto_scan": True,
+    "threshold_ms": 100,
 }
 
 
