@@ -25,10 +25,13 @@ scan-to-print/
   main.py            # Entry point, launches the GUI
   app.py             # Main application window (Tkinter)
   printer.py         # Printer listing and print job logic
-  scanner.py         # Barcode input handling (keyboard listener)
-  settings.py        # Read/write settings.json in %APPDATA%
-  updater.py         # GitHub release check on startup
-  locales/           # UI string translations (en.json, nl.json, …)
+  scanner.py         # Global pynput keyboard listener (timing-based barcode detection)
+  settings.py        # Read/write settings.json in %APPDATA%/ScanToPrint/
+  speedcheck.py      # Scanner speed check window (measures threshold, saves to settings)
+  updater.py         # GitHub release check on startup (planned)
+  locales/           # UI string translations (en.json, nl.json, …) (planned)
+  build.py           # Branch-aware build script (outputs to dist/<branch>/)
+  test_scan.py       # Simulates USB scanner input for testing without hardware
   CLAUDE.md          # This file — project briefing for Claude
   FEATURES.md        # Feature planning and implementation notes
   LICENSE            # MIT
@@ -42,20 +45,22 @@ scan-to-print/
 - If multiple files match a barcode (different extensions), show a dialog to pick one
 - The app should be runnable as a `.exe` via PyInstaller for distribution on Windows machines without Python
 - Printing targets a named printer directly via `pypdfium2` / `Pillow` + `win32print` — `SetDefaultPrinter` is never called
-- Global barcode input is captured via `pynput` using timing-based detection (~50ms threshold) so the app works when minimised to the system tray
-- Settings are persisted in `%APPDATA%\ScanToPrint\settings.json`
+- Global barcode input is captured via `pynput` using timing-based detection (default 100ms threshold, user-calibrated via Speed check window) so the app works when minimised to the system tray
+- Settings are persisted in `%APPDATA%\ScanToPrint\settings.json`; keys: `folder`, `printer`, `window_width`, `window_height`, `auto_scan`, `threshold_ms`
 - UI language strings live in `locales/<lang>.json`; English is the fallback
 - Language prefix feature prepends an ISO 3166-1 alpha-2 code with a hyphen (e.g. `EN-12345678.*`)
 - Versioning format: `yyyy.mm.dd`; update check calls the GitHub releases API on startup
+- Branch-per-feature workflow; `build.py` outputs to `dist/<branch>/ScanToPrint.exe`
+- Repo: squash merge only; main branch protected (no direct push, no force push)
 
 ## Status
 - [x] Project scaffolded
 - [x] GUI layout done
 - [x] Printer selection working
-- [x] Barcode input working (focus-based)
+- [x] Barcode input working (focus-based, superseded)
 - [x] Print job working (ShellExecute — to be replaced by pypdfium2/Pillow in Feature 9)
-- [ ] Persistent settings (#3)
-- [ ] Auto scan-to-print / global keyboard hook (#10)
+- [x] Persistent settings (#3) — `settings.py`, File menu, window size, last folder/printer
+- [x] Auto scan-to-print / global keyboard hook (#10) — `pynput` listener, pause toggle, speed check window
 - [ ] GitHub update check (#13)
 - [ ] UI language selection (#11)
 - [ ] Print history / log (#1)
