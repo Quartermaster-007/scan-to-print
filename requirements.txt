@@ -1,2 +1,7 @@
 pywin32>=306
+pypdfium2>=4.0
+Pillow>=10.0
+pynput>=1.7
+pystray>=0.19
+requests>=2.31
 pyinstaller>=6.0

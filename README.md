@@ -34,22 +34,24 @@ If multiple files in the folder share the same barcode name (different extension
 
 ```
 scan-to-print/
-  main.py          # Entry point — run this to launch the app
-  app.py           # Main Tkinter window and UI logic
-  printer.py       # Printer enumeration and print job (pywin32 + ShellExecute)
-  scanner.py       # Barcode input handling (Enter key binding)
-  requirements.txt # Python dependencies
+  main.py            # Entry point — run this to launch the app
+  app.py             # Main Tkinter window and UI logic
+  printer.py         # Printer enumeration and print job (pywin32 + ShellExecute)
+  scanner.py         # Barcode input handling (Enter key binding)
+  requirements.txt   # Python dependencies
+  ScanToPrint.spec   # PyInstaller build spec
+  images/            # App icons
 ```
 
 ## Building a standalone .exe
 
 ```
-pyinstaller --onefile --windowed main.py
+pyinstaller ScanToPrint.spec
 ```
 
-The output will be in the `dist/` folder. The `.exe` can be run on Windows machines without Python installed.
+The output will be in the `dist/` folder as `ScanToPrint.exe`. It can be run on Windows machines without Python installed.
 
 ## Notes
 
-- The app uses `win32print.SetDefaultPrinter` before printing, which temporarily changes the system default printer. This is a known side effect of the ShellExecute print approach.
-- The barcode entry field must have focus for scanner input to register. The field is focused on startup.
+- The app prints directly to the selected printer via `pypdfium2` (PDF) and `Pillow` (images) + `win32print`, without changing the Windows system default printer.
+- A global keyboard listener captures barcode scanner input even when the app is minimised to the system tray.
