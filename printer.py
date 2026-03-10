@@ -18,6 +18,15 @@ def get_printers():
         return ["(pywin32 not installed — Windows only)"]
 
 
+def get_default_printer() -> str:
+    """Return the Windows default printer name, or empty string if unavailable."""
+    try:
+        import win32print
+        return win32print.GetDefaultPrinter()
+    except Exception:
+        return ""
+
+
 def print_file(file_path, printer_name):
     """Send a file to the specified printer using Windows ShellExecute."""
     if not os.path.exists(file_path):
