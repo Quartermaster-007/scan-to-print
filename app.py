@@ -29,6 +29,9 @@ class ScanToPrintApp:
 
         self.scanner = BarcodeScanner(self.root, self._on_barcode)
 
+        # Manual entry: bind Enter directly on the barcode entry widget
+        self.barcode_entry.bind("<Return>", self._on_manual_entry)
+
         # Save settings on close
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -87,8 +90,7 @@ class ScanToPrintApp:
 
         self.barcode_entry = ttk.Entry(scan_frame, width=30, font=("Courier", 14))
         self.barcode_entry.grid(row=0, column=0, padx=5, pady=10)
-        self.barcode_entry.focus_set()
-        ttk.Label(scan_frame, text="(scan or type + Enter)").grid(row=0, column=1, padx=5)
+        ttk.Label(scan_frame, text="(global listener active — or type + Enter)").grid(row=0, column=1, padx=5)
 
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
@@ -143,6 +145,7 @@ class ScanToPrintApp:
         self._save_settings()
 
     def _on_close(self):
+        self.scanner.stop()
         self._save_settings()
         self.root.destroy()
 
@@ -156,6 +159,12 @@ class ScanToPrintApp:
     # ------------------------------------------------------------------
     # UI actions
     # ------------------------------------------------------------------
+
+    def _on_manual_entry(self, *_):
+        value = self.barcode_entry.get().strip()
+        if value:
+            self.barcode_entry.delete(0, "end")
+            self._on_barcode(value)
 
     def _browse_folder(self):
         path = filedialog.askdirectory()
