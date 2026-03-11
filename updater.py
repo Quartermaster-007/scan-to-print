@@ -78,6 +78,7 @@ def _launch_swap_script(new_exe: str, current_exe: str) -> None:
             'tasklist | find /i "ScanToPrint.exe" >nul 2>&1\n'
             "if not errorlevel 1 ( timeout /t 1 /nobreak >nul & goto wait )\n"
             f'copy /y "{new_exe}" "{current_exe}"\n'
+            "timeout /t 3 /nobreak >nul\n"
             f'start "" "{current_exe}"\n'
             'del "%~f0"\n'
         )
