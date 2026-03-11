@@ -1,10 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os as _os
+import sys as _sys
 
+# Bundle VC++ runtime DLLs so python3XX.dll can load on machines that don't
+# have the Visual C++ Redistributable installed system-wide.
+_python_dir = _os.path.dirname(_sys.executable)
+_vc_binaries = [
+    (_os.path.join(_python_dir, dll), '.')
+    for dll in ('vcruntime140.dll', 'vcruntime140_1.dll')
+    if _os.path.exists(_os.path.join(_python_dir, dll))
+]
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=_vc_binaries,
     datas=[
         ('images/scan-to-print.ico', 'images'),
         ('images/scan-to-print.png', 'images'),
