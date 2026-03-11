@@ -70,21 +70,31 @@ def _fetch_latest(channel: str) -> dict | None:
 
 def _launch_swap_script(new_exe: str, current_exe: str) -> None:
     """Write and launch a .bat that replaces the running exe after it exits."""
+    exe_dir = os.path.dirname(current_exe)
     bat = os.path.join(tempfile.gettempdir(), "stp_update.bat")
-    with open(bat, "w") as f:
+    with open(bat, "w", encoding="ascii") as f:
         f.write(
             "@echo off\n"
             ":wait\n"
             'tasklist | find /i "ScanToPrint.exe" >nul 2>&1\n'
             "if not errorlevel 1 ( timeout /t 1 /nobreak >nul & goto wait )\n"
             f'copy /y "{new_exe}" "{current_exe}"\n'
-            "timeout /t 3 /nobreak >nul\n"
-            f'start "" "{current_exe}"\n'
+            f'start "" /D "{exe_dir}" "{current_exe}"\n'
             'del "%~f0"\n'
         )
+    # Strip PyInstaller's internal env vars and stale MEI paths so the new
+    # exe extracts fresh instead of reusing the (already-deleted) MEI dir.
+    clean_env = os.environ.copy()
+    for key in list(clean_env):
+        if key.startswith(("_MEI", "_PYI")):
+            del clean_env[key]
+    path_parts = clean_env.get("PATH", "").split(os.pathsep)
+    clean_env["PATH"] = os.pathsep.join(p for p in path_parts if "_MEI" not in p)
+
     subprocess.Popen(
         ["cmd", "/c", bat],
         creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
+        env=clean_env,
     )
 
 
