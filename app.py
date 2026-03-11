@@ -52,10 +52,9 @@ class ScanToPrintApp:
         self.selected_printer.trace_add("write", self._on_printer_changed)
 
         # Startup update check (2s delay so window is rendered first)
-        self.root.after(
-            2000, updater.check_for_updates,
+        self.root.after(2000, lambda: updater.check_for_updates(
             self.root, __version__, self._settings["updates"]["channel"],
-        )
+        ))
 
     # ------------------------------------------------------------------
     # Build
