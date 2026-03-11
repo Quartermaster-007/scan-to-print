@@ -83,7 +83,7 @@ def _launch_swap_script(new_exe: str, current_exe: str) -> None:
         )
     subprocess.Popen(
         ["cmd", "/c", bat],
-        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
 
