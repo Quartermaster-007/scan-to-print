@@ -159,9 +159,9 @@ Register the app to launch automatically when Windows starts.
 
 ---
 
-## Feature 9 — Network/shared printer support improvements
+## Feature 9 — Direct silent printing (no dialog, no default-printer side effect) ✅ Implemented
 
-Currently, `SetDefaultPrinter` is called before each print, which is a Windows side effect. A cleaner approach would print directly to a named printer without changing the system default.
+Currently, `SetDefaultPrinter` is called before each print and `ShellExecute` is used to trigger printing, which opens the application's print dialog and temporarily changes the system default printer. The fix is to print directly to a named printer without any UI or side effects.
 
 **Questions to answer before building:**
 - Is the current side effect (temporarily changing default printer) causing any real problems in your environment?
@@ -260,10 +260,10 @@ Once you've filled in the features you want, list them here in the order you'd l
 1. #3 — Persistent settings
 2. #10 — Auto scan-to-print
 3. #13 — App updates via Github
-4. #11 — Language selection for UI
-5. #1 — Print history / log
-6. #2 — Sound / visual feedback on scan
-7. #9 — Network/shared printer support improvements
-8. #5 — Print copies / print options
+4. #9 — Direct silent printing (no dialog, no default-printer side effect)
+5. #5 — Print copies / print options
+6. #11 — Language selection for UI
+7. #1 — Print history / log
+8. #2 — Sound / visual feedback on scan
 9. #7 — System tray / minimise to tray
 10. #12 — Language selection for prefix
