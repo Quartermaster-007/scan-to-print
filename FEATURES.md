@@ -229,18 +229,27 @@ The list of languages shown should follow the format:
 
 ---
 
-## Feature 13 — App updates via Github
+## Feature 13 — App updates via Github ✅ Implemented
 
 Build the Windows executable on Github and host releases on there. The app should check for new versions of the app and download that new version. Versioning should be done in the format yyyy.mm.dd.
 
 **Your answers:**
 - Check on startup; if a newer version is found, prompt the user with a dialog to download and restart. No auto-download.
 
-**Implementation note:**
-- Version format: `yyyy.mm.dd` (compare lexicographically — newer = greater string).
-- On startup, call the GitHub releases API (`https://api.github.com/repos/Quartermaster-007/scan-to-print/releases/latest`) to get the latest tag.
-- If newer than the running version, show a dialog: "Version X.X.X is available. Download now?" — opens the release page in the browser.
-- GitHub Actions workflow: build `ScanToPrint.exe` via PyInstaller on push to `main`, publish as a GitHub Release tagged `yyyy.mm.dd`.
+**Implementation notes:**
+- `version.py` — `__version__` placeholder (`"0.0.0"`), overwritten by CI at build time; imported by `app.py` for the window title and update check.
+- `updater.py` — daemon thread fetches `/releases/latest` (stable channel) or `/releases` (pre-release channel); compares version tuples; shows a dialog with up to three buttons:
+  - **Update now** (only when running as frozen exe AND release has a `ScanToPrint.exe` asset) — downloads to `%TEMP%`, writes a `.bat` swap script, launches it, exits; the script waits for the old process to die, copies the new exe over the old one, and relaunches.
+  - **Download manually** — opens the GitHub release page in the browser.
+  - **Later** — dismisses.
+- `silent=True` on startup (no dialog if already up to date); `silent=False` for **Help → Check for updates** (shows "You are up to date" too).
+- Settings key `updates.channel` (`"stable"` | `"prerelease"`) selectable via **File → Preferences → Update channel**.
+- Window title updated to `"Scan to Print — {__version__}"`.
+- **Help** menu added: "Check for updates" + "About Scan to Print" (version, GitHub link, MIT license).
+- Settings restructured from flat keys to nested groups: `workspace` (folder, printer), `ui` (window_width, window_height), `scanner` (auto_scan, threshold_ms), `updates` (channel). Deep merge ensures partial overrides don't wipe sibling defaults.
+- `.github/workflows/release.yml` — `windows-latest`: checkout → stamp `version.py` → pip install → PyInstaller → `softprops/action-gh-release@v2`; triggered by tag push `yyyy.mm.dd*` or `workflow_dispatch` (version string + prerelease boolean inputs).
+- Version format: `yyyy.mm.dd` or `yyyy.mm.dd.N` for same-day builds; compared as numeric tuples.
+- `GITHUB_TOKEN` automatic — no extra secrets needed.
 
 ---
 

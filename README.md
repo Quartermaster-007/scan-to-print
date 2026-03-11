@@ -18,7 +18,7 @@ pip install -r requirements.txt
 - `pypdfium2` — PDF rendering and printing (planned — Feature #9)
 - `Pillow` — image printing (planned — Feature #9)
 - `pystray` — system tray icon (planned — Feature #7)
-- `requests` — GitHub update check (planned — Feature #13)
+- `requests` — GitHub update check and in-app self-update
 - `pyinstaller` — for building a standalone `.exe`
 
 ## Running the app
@@ -46,6 +46,18 @@ Settings (folder, printer, window size, auto-scan state, scanner threshold) are 
 | Pause / Resume auto-scan | Temporarily disables the global listener |
 | Speed check… | Measures your scanner's inter-key timing and sets the detection threshold automatically |
 
+## Updates
+
+The app checks for a new version on startup. If one is available, a dialog offers:
+
+- **Update now** — downloads the new `.exe` in the background and replaces the current one automatically after exit (only available when running as a built `.exe`)
+- **Download manually** — opens the GitHub release page in the browser
+- **Later** — dismisses until next startup
+
+You can also trigger a manual check via **Help → Check for updates**.
+
+The update channel (**Stable releases** or **Pre-releases**) is configurable under **File → Preferences → Update channel**.
+
 ## Project structure
 
 ```
@@ -56,6 +68,8 @@ scan-to-print/
   scanner.py         # Global pynput keyboard listener (timing-based detection)
   settings.py        # Persistent settings in %APPDATA%/ScanToPrint/settings.json
   speedcheck.py      # Scanner speed check window
+  updater.py         # GitHub release check and in-app self-update
+  version.py         # __version__ placeholder, overwritten by CI at build time
   build.py           # Branch-aware build script (dist/<branch>/ScanToPrint.exe)
   test_scan.py       # Simulates USB scanner input for testing without hardware
   requirements.txt   # Python dependencies
@@ -83,4 +97,4 @@ Injects a barcode at scanner speed after a 3-second delay (time to switch focus)
 
 - The global keyboard listener detects scanner input by timing: all characters must arrive within the configured threshold (default 100ms). Human typing is slower and is ignored.
 - The app prints directly to the selected printer via `pywin32`; it does not change the Windows system default printer.
-- Settings are saved to `%APPDATA%\ScanToPrint\settings.json`. Use **File → Open settings file** to inspect or edit them.
+- Settings are saved to `%APPDATA%\ScanToPrint\settings.json`. Use **File → Preferences → Open settings file…** to inspect or edit them.

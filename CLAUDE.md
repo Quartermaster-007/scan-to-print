@@ -28,7 +28,8 @@ scan-to-print/
   scanner.py         # Global pynput keyboard listener (timing-based barcode detection)
   settings.py        # Read/write settings.json in %APPDATA%/ScanToPrint/
   speedcheck.py      # Scanner speed check window (measures threshold, saves to settings)
-  updater.py         # GitHub release check on startup (planned)
+  updater.py         # GitHub release check on startup + in-app self-update
+  version.py         # __version__ placeholder, overwritten by CI at build time
   locales/           # UI string translations (en.json, nl.json, …) (planned)
   build.py           # Branch-aware build script (outputs to dist/<branch>/)
   test_scan.py       # Simulates USB scanner input for testing without hardware
@@ -46,7 +47,7 @@ scan-to-print/
 - The app should be runnable as a `.exe` via PyInstaller for distribution on Windows machines without Python
 - Printing targets a named printer directly via `pypdfium2` / `Pillow` + `win32print` — `SetDefaultPrinter` is never called
 - Global barcode input is captured via `pynput` using timing-based detection (default 100ms threshold, user-calibrated via Speed check window) so the app works when minimised to the system tray
-- Settings are persisted in `%APPDATA%\ScanToPrint\settings.json`; keys: `folder`, `printer`, `window_width`, `window_height`, `auto_scan`, `threshold_ms`
+- Settings are persisted in `%APPDATA%\ScanToPrint\settings.json` as nested groups: `workspace` (folder, printer), `ui` (window_width, window_height), `scanner` (auto_scan, threshold_ms), `updates` (channel)
 - UI language strings live in `locales/<lang>.json`; English is the fallback
 - Language prefix feature prepends an ISO 3166-1 alpha-2 code with a hyphen (e.g. `EN-12345678.*`)
 - Versioning format: `yyyy.mm.dd`; update check calls the GitHub releases API on startup
@@ -61,7 +62,7 @@ scan-to-print/
 - [x] Print job working (ShellExecute — to be replaced by pypdfium2/Pillow in Feature 9)
 - [x] Persistent settings (#3) — `settings.py`, File menu, window size, last folder/printer
 - [x] Auto scan-to-print / global keyboard hook (#10) — `pynput` listener, pause toggle, speed check window
-- [ ] GitHub update check (#13)
+- [x] GitHub update check + in-app self-update (#13) — `updater.py`, `version.py`, `.github/workflows/release.yml`
 - [ ] UI language selection (#11)
 - [ ] Print history / log (#1)
 - [ ] Failure sound feedback (#2)
@@ -69,4 +70,4 @@ scan-to-print/
 - [ ] Print copies input (#5)
 - [ ] System tray (#7)
 - [ ] Language prefix (#12)
-- [ ] Packaged as .exe
+- [x] Packaged as .exe — CI builds via PyInstaller on `windows-latest`, published as GitHub Release
