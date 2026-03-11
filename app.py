@@ -3,25 +3,31 @@ Main application window.
 """
 import os
 import tkinter as tk
+import webbrowser
 from tkinter import ttk, filedialog, messagebox
 
 import settings
+import updater
+from version import __version__
 from printer import get_printers, get_default_printer, print_file
 from scanner import BarcodeScanner
 from speedcheck import SpeedcheckWindow
+
+GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
 
 class ScanToPrintApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Scan to Print")
+        self.root.title(f"Scan to Print — {__version__}")
         self.root.resizable(True, True)
 
         self._settings = settings.load()
 
-        self.folder_path = tk.StringVar(value=self._settings.get("folder", ""))
+        self.folder_path = tk.StringVar(value=self._settings["workspace"]["folder"])
         self.selected_printer = tk.StringVar()
         self.status_text = tk.StringVar(value="Ready. Scan a barcode to print.")
+        self._update_channel = tk.StringVar(value=self._settings["updates"]["channel"])
 
         self._build_menu()
         self._build_ui()
@@ -30,9 +36,9 @@ class ScanToPrintApp:
 
         self.scanner = BarcodeScanner(
             self.root, self._on_barcode,
-            threshold_ms=self._settings.get("threshold_ms", 100),
+            threshold_ms=self._settings["scanner"]["threshold_ms"],
         )
-        if not self._settings.get("auto_scan", True):
+        if not self._settings["scanner"]["auto_scan"]:
             self._toggle_scanner()
 
         # Manual entry: bind Enter directly on the barcode entry widget
@@ -41,10 +47,14 @@ class ScanToPrintApp:
         # Save settings on close
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-        # Persist folder whenever it changes
+        # Persist folder/printer whenever they change
         self.folder_path.trace_add("write", self._on_folder_changed)
-        # Persist printer whenever it changes
         self.selected_printer.trace_add("write", self._on_printer_changed)
+
+        # Startup update check (2s delay so window is rendered first)
+        self.root.after(2000, lambda: updater.check_for_updates(
+            self.root, __version__, self._settings["updates"]["channel"],
+        ))
 
     # ------------------------------------------------------------------
     # Build
@@ -53,17 +63,45 @@ class ScanToPrintApp:
     def _build_menu(self):
         menubar = tk.Menu(self.root)
 
+        # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Open settings file", command=self._open_settings_file)
+
+        prefs_menu = tk.Menu(file_menu, tearoff=0)
+        prefs_menu.add_command(label="Open settings file...", command=self._open_settings_file)
+        prefs_menu.add_separator()
+        channel_menu = tk.Menu(prefs_menu, tearoff=0)
+        channel_menu.add_radiobutton(
+            label="Stable releases",
+            variable=self._update_channel,
+            value="stable",
+            command=self._on_channel_changed,
+        )
+        channel_menu.add_radiobutton(
+            label="Pre-releases",
+            variable=self._update_channel,
+            value="prerelease",
+            command=self._on_channel_changed,
+        )
+        prefs_menu.add_cascade(label="Update channel", menu=channel_menu)
+
+        file_menu.add_cascade(label="Preferences", menu=prefs_menu)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self._on_close)
         menubar.add_cascade(label="File", menu=file_menu)
 
+        # Scanner menu
         self._scanner_menu = tk.Menu(menubar, tearoff=0)
         self._scanner_menu.add_command(label="Pause auto-scan", command=self._toggle_scanner)
         self._scanner_menu.add_separator()
         self._scanner_menu.add_command(label="Speed check...", command=self._open_speedcheck)
         menubar.add_cascade(label="Scanner", menu=self._scanner_menu)
+
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="Check for updates", command=self._check_for_updates_manual)
+        help_menu.add_separator()
+        help_menu.add_command(label="About Scan to Print", command=self._open_about)
+        menubar.add_cascade(label="Help", menu=help_menu)
 
         self.root.config(menu=menubar)
 
@@ -119,8 +157,8 @@ class ScanToPrintApp:
     # ------------------------------------------------------------------
 
     def _apply_window_size(self):
-        w = self._settings.get("window_width", 0)
-        h = self._settings.get("window_height", 0)
+        w = self._settings["ui"]["window_width"]
+        h = self._settings["ui"]["window_height"]
         if w > 0 and h > 0:
             self.root.geometry(f"{w}x{h}")
 
@@ -130,7 +168,7 @@ class ScanToPrintApp:
         if not printers:
             return
 
-        saved = self._settings.get("printer", "")
+        saved = self._settings["workspace"]["printer"]
         if saved and saved in printers:
             self.selected_printer.set(saved)
             return
@@ -140,27 +178,36 @@ class ScanToPrintApp:
             self.selected_printer.set(default)
             return
 
-        # Fall back to first available printer
         self.printer_combo.current(0)
 
     def _save_settings(self):
         w = self.root.winfo_width()
         h = self.root.winfo_height()
-        settings.save(
-            {
+        settings.save({
+            "workspace": {
                 "folder": self.folder_path.get(),
                 "printer": self.selected_printer.get(),
+            },
+            "ui": {
                 "window_width": w if w > 1 else 0,
                 "window_height": h if h > 1 else 0,
+            },
+            "scanner": {
                 "auto_scan": not self.scanner.paused,
                 "threshold_ms": self.scanner.threshold_ms,
-            }
-        )
+            },
+            "updates": {
+                "channel": self._update_channel.get(),
+            },
+        })
 
     def _on_folder_changed(self, *_):
         self._save_settings()
 
     def _on_printer_changed(self, *_):
+        self._save_settings()
+
+    def _on_channel_changed(self):
         self._save_settings()
 
     def _on_close(self):
@@ -171,7 +218,6 @@ class ScanToPrintApp:
     def _open_settings_file(self):
         path = settings.get_path()
         if not os.path.exists(path):
-            # Create an empty settings file so there is something to open
             settings.save(settings.load())
         os.startfile(path)
 
@@ -217,6 +263,36 @@ class ScanToPrintApp:
         path = filedialog.askdirectory()
         if path:
             self.folder_path.set(path)
+
+    def _check_for_updates_manual(self):
+        updater.check_for_updates(
+            self.root, __version__, self._update_channel.get(), silent=False,
+        )
+
+    def _open_about(self):
+        dlg = tk.Toplevel(self.root)
+        dlg.title("About Scan to Print")
+        dlg.resizable(False, False)
+        dlg.grab_set()
+
+        tk.Label(dlg, text="Scan to Print", font=("TkDefaultFont", 14, "bold")).pack(pady=(20, 4))
+        tk.Label(dlg, text=f"Version {__version__}").pack()
+        tk.Label(dlg, text="Scan a barcode → print the file").pack(pady=(4, 12))
+
+        link = tk.Label(dlg, text="github.com/Quartermaster-007/scan-to-print",
+                        fg="blue", cursor="hand2")
+        link.pack()
+        link.bind("<Button-1>", lambda _: webbrowser.open(GITHUB_URL))
+
+        tk.Label(dlg, text="MIT License").pack(pady=(12, 16))
+
+        btn_frame = tk.Frame(dlg)
+        btn_frame.pack(pady=(0, 16))
+        ttk.Button(btn_frame, text="Check for updates", command=lambda: [
+            dlg.destroy(),
+            self._check_for_updates_manual(),
+        ]).pack(side="left", padx=6)
+        ttk.Button(btn_frame, text="Close", command=dlg.destroy).pack(side="left", padx=6)
 
     def _on_barcode(self, barcode):
         self.status_text.set(f"Barcode received: {barcode}")
