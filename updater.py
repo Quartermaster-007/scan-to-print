@@ -116,7 +116,7 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
     def _on_done() -> None:
         dlg.destroy()
         _launch_swap_script(new_exe, current_exe)
-        root.destroy()
+        os._exit(0)
 
     def _on_error(msg: str) -> None:
         dlg.destroy()
