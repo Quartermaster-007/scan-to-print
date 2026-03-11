@@ -185,6 +185,15 @@ The logic for selecting the printer should be:
 - **Images (PNG, JPG)**: `Pillow` opens the image and sends it to the named printer via `win32print` / GDI.
 - Both are pure pip dependencies — no bundled executables, keeping the `.exe` size minimal.
 
+**Implementation notes:**
+- `printer.py` — `print_file(file_path, printer_name)` dispatches to `_print_pdf` or `_print_image` based on file extension; raises `ValueError` for unsupported types
+- **PDF**: `pypdfium2` opens the document, renders each page to a bitmap at the printer's native DPI (`LOGPIXELSX / 72`), converted to RGB PIL image and drawn via `ImageWin.Dib` to a GDI printer DC
+- **Images (PNG, JPG, BMP, GIF, TIFF)**: `Pillow` opens and converts to RGB, drawn the same way
+- Both paths use `win32ui.CreateDC().CreatePrinterDC(printer_name)` — `SetDefaultPrinter` is never called
+- Pages/images are scaled to fit the printable area (`HORZRES` × `VERTRES`) while preserving aspect ratio
+- `AbortDoc` is called on any exception so the printer does not receive a partial job
+- `build.py` updated to stamp `version.py` before building (default `9999.0.0`) so local dev builds never trigger the updater; `--version` flag allows overriding
+
 ---
 
 ## Feature 10 — Auto scan-to-print ✅ Implemented
