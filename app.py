@@ -1,6 +1,7 @@
 """
 Main application window.
 """
+import datetime
 import os
 import tkinter as tk
 import webbrowser
@@ -14,7 +15,7 @@ from version import __version__
 from printer import get_printers, get_default_printer, print_file
 from scanner import BarcodeScanner
 from speedcheck import SpeedcheckWindow
-from language_window import LanguageWindow
+from language_window import LanguageWindow, AVAILABLE_PREFIX_LANGUAGES
 from PIL import ImageTk
 from tray import TrayManager, build_status_icon
 
@@ -149,7 +150,6 @@ class ScanToPrintApp:
         self._prefix_menu.add_command(
             label=i18n.t("menu_prefix_settings"), command=self._open_prefix_window
         )
-        self._rebuild_prefix_recent_menu()
         menubar.add_cascade(label=i18n.t("menu_prefix"), menu=self._prefix_menu)
 
         # Help menu
@@ -220,7 +220,6 @@ class ScanToPrintApp:
         scan_frame.columnconfigure(2, weight=1)  # col 2 (entry) expands; cols 0-1 (combo, dash) are fixed
 
         # Prefix combo sits in col 0 before the entry; hidden when feature is off
-        from language_window import AVAILABLE_PREFIX_LANGUAGES
         prefix_options = [f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES]
         current_display = next(
             (f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
@@ -275,7 +274,6 @@ class ScanToPrintApp:
     _MAX_LOG = 50
 
     def _log(self, message: str, error: bool = False):
-        import datetime
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         entry = f"[{timestamp}] {message}"
         self._log_entries.append((entry, error))
@@ -484,7 +482,6 @@ class ScanToPrintApp:
             self._prefix_lang = code
             self._push_prefix_recent(code)
             self._save_settings()
-            self._rebuild_prefix_recent_menu()
             if hasattr(self, "_tray"):
                 self._tray.update_menu()
 
@@ -493,7 +490,6 @@ class ScanToPrintApp:
         if self._prefix_combo is None:
             return
         # Update display var to match current code
-        from language_window import AVAILABLE_PREFIX_LANGUAGES
         current_display = next(
             (f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
             self._prefix_lang_var.get(),
@@ -505,12 +501,8 @@ class ScanToPrintApp:
         else:
             self._prefix_combo.grid_remove()
             self._prefix_dash.grid_remove()
-        self._rebuild_prefix_recent_menu()
         if hasattr(self, "_tray"):
             self._tray.update_menu()
-
-    def _rebuild_prefix_recent_menu(self):
-        pass  # recent list no longer shown in menubar
 
     def _set_prefix_lang(self, code: str):
         """Quick-select a prefix language from the menu or tray."""
@@ -676,7 +668,10 @@ class ScanToPrintApp:
         else:
             file_to_print = os.path.join(folder, matches[0])
 
-        copies = self._copies.get()
+        try:
+            copies = self._copies.get()
+        except tk.TclError:
+            copies = 1
         filename = os.path.basename(file_to_print)
         self.status_text.set(i18n.t(
             "status_printing",
@@ -689,9 +684,17 @@ class ScanToPrintApp:
             self.status_text.set(i18n.t("status_sent", file=filename))
             self._log(i18n.t("log_printed", barcode=barcode, file=filename, printer=printer, copies=copies))
         except Exception as e:
-            self._show_error(i18n.t("dlg_printer_error_title"), str(e))
+            try:
+                import pywintypes
+                if isinstance(e, pywintypes.error):
+                    msg = e.args[2] if len(e.args) > 2 else str(e)
+                else:
+                    msg = str(e)
+            except ImportError:
+                msg = str(e)
+            self._show_error(i18n.t("dlg_printer_error_title"), msg)
             self.status_text.set(i18n.t("status_print_failed"))
-            self._log(i18n.t("log_print_failed", barcode=barcode, file=filename, error=str(e)), error=True)
+            self._log(i18n.t("log_print_failed", barcode=barcode, file=filename, error=msg), error=True)
 
     def _pick_file(self, files):
         dialog = tk.Toplevel(self.root)
