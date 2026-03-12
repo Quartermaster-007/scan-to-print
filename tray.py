@@ -134,7 +134,7 @@ class TrayManager:
             recent = self._get_recent_prefix()
             if recent:
                 from language_window import AVAILABLE_PREFIX_LANGUAGES
-                lang_map = {code: lbl for lbl, code in AVAILABLE_PREFIX_LANGUAGES}
+                lang_map = {code: i18n.t(key) for key, code in AVAILABLE_PREFIX_LANGUAGES}
                 prefix_items = []
                 for code in recent:
                     label = lang_map.get(code, code)

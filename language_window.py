@@ -18,30 +18,30 @@ AVAILABLE_LANGUAGES = [
 ]
 
 AVAILABLE_PREFIX_LANGUAGES = [
-    ("Bulgarian", "BG"),
-    ("Catalan", "CA"),
-    ("Croatian", "HR"),
-    ("Czech", "CS"),
-    ("Danish", "DA"),
-    ("Dutch", "NL"),
-    ("English", "EN"),
-    ("Finnish", "FI"),
-    ("French", "FR"),
-    ("German", "DE"),
-    ("Greek", "EL"),
-    ("Hungarian", "HU"),
-    ("Italian", "IT"),
-    ("Norwegian", "NO"),
-    ("Polish", "PL"),
-    ("Portuguese", "PT"),
-    ("Romanian", "RO"),
-    ("Russian", "RU"),
-    ("Slovak", "SK"),
-    ("Slovenian", "SL"),
-    ("Spanish", "ES"),
-    ("Swedish", "SV"),
-    ("Turkish", "TR"),
-    ("Ukrainian", "UK"),
+    ("lang_BG", "BG"),
+    ("lang_CA", "CA"),
+    ("lang_HR", "HR"),
+    ("lang_CS", "CS"),
+    ("lang_DA", "DA"),
+    ("lang_NL", "NL"),
+    ("lang_EN", "EN"),
+    ("lang_FI", "FI"),
+    ("lang_FR", "FR"),
+    ("lang_DE", "DE"),
+    ("lang_EL", "EL"),
+    ("lang_HU", "HU"),
+    ("lang_IT", "IT"),
+    ("lang_NO", "NO"),
+    ("lang_PL", "PL"),
+    ("lang_PT", "PT"),
+    ("lang_RO", "RO"),
+    ("lang_RU", "RU"),
+    ("lang_SK", "SK"),
+    ("lang_SL", "SL"),
+    ("lang_ES", "ES"),
+    ("lang_SV", "SV"),
+    ("lang_TR", "TR"),
+    ("lang_UK", "UK"),
 ]
 
 
@@ -106,10 +106,10 @@ class LanguageWindow:
         self._prefix_radio_frame.pack(anchor="w", padx=12, pady=(0, 8))
 
         _COLS = 3
-        for i, (label, code) in enumerate(AVAILABLE_PREFIX_LANGUAGES):
+        for i, (key, code) in enumerate(AVAILABLE_PREFIX_LANGUAGES):
             ttk.Radiobutton(
                 self._prefix_radio_frame,
-                text=f"{label} ({code})",
+                text=f"{i18n.t(key)} ({code})",
                 variable=self._selected_prefix,
                 value=code,
             ).grid(row=i // _COLS, column=i % _COLS, sticky="w", padx=(0, 12), pady=2)

@@ -219,9 +219,9 @@ class ScanToPrintApp:
 
         # Prefix combo sits in col 0 before the entry; hidden when feature is off
         from language_window import AVAILABLE_PREFIX_LANGUAGES
-        prefix_options = [f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES]
+        prefix_options = [f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES]
         current_display = next(
-            (f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
+            (f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
             prefix_options[0],
         )
         self._prefix_lang_var.set(current_display)
@@ -493,7 +493,7 @@ class ScanToPrintApp:
         # Update display var to match current code
         from language_window import AVAILABLE_PREFIX_LANGUAGES
         current_display = next(
-            (f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
+            (f"{i18n.t(key)} ({code})" for key, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
             self._prefix_lang_var.get(),
         )
         self._prefix_lang_var.set(current_display)
@@ -518,7 +518,7 @@ class ScanToPrintApp:
         if self._prefix_recent:
             self._prefix_menu.add_separator()
             from language_window import AVAILABLE_PREFIX_LANGUAGES
-            lang_map = {code: lbl for lbl, code in AVAILABLE_PREFIX_LANGUAGES}
+            lang_map = {code: i18n.t(key) for key, code in AVAILABLE_PREFIX_LANGUAGES}
             for code in self._prefix_recent:
                 label = lang_map.get(code, code)
                 display = f"{label} ({code})"
