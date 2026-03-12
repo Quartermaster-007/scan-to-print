@@ -34,6 +34,15 @@ Show a record of every scan attempt (barcode scanned, file matched, printer used
 - Only keep the logs for the current session. No need to write to disk.
 - No need to export.
 
+**Implementation notes:**
+- A "5. Print log" `ttk.LabelFrame` is added below the scan area; the root row is weighted so the log expands when the window is resized
+- `tk.Text` widget (height=8, fixed font, `state="disabled"`) with a vertical scrollbar; auto-scrolls to the latest entry
+- `_log_entries: list[tuple[str, bool]]` on `ScanToPrintApp` stores `(formatted_line, is_error)` and is preserved across language rebuilds (max 50 entries)
+- `_log(message, error=False)` prepends `[HH:MM:SS]` and calls `_refresh_log()`; `_refresh_log()` rewrites the widget and applies a red tag for error lines
+- Error lines (no folder, no printer, no file, print exception) use `foreground="#dc2626"`; successful prints use the default colour
+- `_apply_language()` calls `_refresh_log()` after rebuilding widgets so existing log entries reappear in the new widget instance
+- All log strings live in `locales/en.json` and `locales/nl.json` under keys `frame_log`, `log_printed`, `log_no_file`, `log_no_folder`, `log_no_printer`, `log_print_failed`
+
 ---
 
 ## Sound / visual feedback on scan

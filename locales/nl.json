@@ -76,5 +76,12 @@
   "updater_failed_title": "Update mislukt",
   "updater_failed_msg": "Downloaden mislukt:\n{error}\n\nDownload de update handmatig.",
   "updater_uptodate_title": "Geen updates",
-  "updater_uptodate_msg": "U gebruikt de nieuwste versie."
+  "updater_uptodate_msg": "U gebruikt de nieuwste versie.",
+
+  "frame_log": "5. Printlog",
+  "log_printed": "OK  barcode={barcode}  bestand={file}  printer={printer}  kopieën={copies}",
+  "log_no_file": "FOUT barcode={barcode}  geen bestand gevonden",
+  "log_no_folder": "FOUT barcode={barcode}  geen map geselecteerd",
+  "log_no_printer": "FOUT barcode={barcode}  geen printer geselecteerd",
+  "log_print_failed": "FOUT barcode={barcode}  bestand={file}  {error}"
 }

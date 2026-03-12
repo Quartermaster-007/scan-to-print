@@ -37,6 +37,8 @@ class ScanToPrintApp:
         self._update_channel = tk.StringVar(value=self._settings["updates"]["channel"])
         self._copies = tk.IntVar(value=1)
         self._devmode = None
+        self._log_entries = []  # preserved across language rebuilds
+        self._log_text = None   # set by _build_ui
 
         self._build_menu()
         self._build_ui()
@@ -186,10 +188,54 @@ class ScanToPrintApp:
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
         ttk.Label(scan_frame, text=i18n.t("lbl_autoscan")).grid(row=0, column=2, padx=(0, 8))
 
+        # --- Log ---
+        log_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_log"))
+        log_frame.grid(row=4, column=0, sticky="nsew", **pad)
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
+        self.root.rowconfigure(4, weight=1)
+
+        self._log_text = tk.Text(
+            log_frame, height=8, state="disabled",
+            font=("TkFixedFont", 9), wrap="none",
+        )
+        self._log_text.grid(row=0, column=0, sticky="nsew", padx=(4, 0), pady=4)
+
+        log_scroll_y = ttk.Scrollbar(log_frame, orient="vertical", command=self._log_text.yview)
+        log_scroll_y.grid(row=0, column=1, sticky="ns", pady=4)
+        self._log_text.config(yscrollcommand=log_scroll_y.set)
+
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
-            row=4, column=0, sticky="ew", padx=10, pady=(0, 10)
+            row=5, column=0, sticky="ew", padx=10, pady=(0, 10)
         )
+
+    # ------------------------------------------------------------------
+    # Log
+    # ------------------------------------------------------------------
+
+    _MAX_LOG = 50
+
+    def _log(self, message: str, error: bool = False):
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        entry = f"[{timestamp}] {message}"
+        self._log_entries.append((entry, error))
+        if len(self._log_entries) > self._MAX_LOG:
+            self._log_entries.pop(0)
+        self._refresh_log()
+
+    def _refresh_log(self):
+        if self._log_text is None:
+            return
+        self._log_text.config(state="normal")
+        self._log_text.delete("1.0", "end")
+        for entry, error in self._log_entries:
+            tag = "error" if error else "normal"
+            self._log_text.insert("end", entry + "\n", tag)
+        self._log_text.tag_config("error", foreground="#dc2626")
+        self._log_text.config(state="disabled")
+        self._log_text.see("end")
 
     # ------------------------------------------------------------------
     # Settings helpers
@@ -292,6 +338,7 @@ class ScanToPrintApp:
         self._apply_printer()
         self._update_scan_indicator()
         self.barcode_entry.bind("<Return>", self._on_manual_entry)
+        self._refresh_log()
 
     # ------------------------------------------------------------------
     # UI actions
@@ -406,11 +453,13 @@ class ScanToPrintApp:
         printer = self.selected_printer.get()
 
         if not folder:
+            self._log(i18n.t("log_no_folder", barcode=barcode), error=True)
             messagebox.showwarning(
                 i18n.t("dlg_no_folder_title"), i18n.t("dlg_no_folder_msg")
             )
             return
         if not printer:
+            self._log(i18n.t("log_no_printer", barcode=barcode), error=True)
             messagebox.showwarning(
                 i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg")
             )
@@ -420,6 +469,7 @@ class ScanToPrintApp:
 
         if not matches:
             self.status_text.set(i18n.t("status_no_file", barcode=barcode))
+            self._log(i18n.t("log_no_file", barcode=barcode), error=True)
             return
 
         if len(matches) > 1:
@@ -431,18 +481,21 @@ class ScanToPrintApp:
             file_to_print = os.path.join(folder, matches[0])
 
         copies = self._copies.get()
+        filename = os.path.basename(file_to_print)
         self.status_text.set(i18n.t(
             "status_printing",
-            file=os.path.basename(file_to_print),
+            file=filename,
             printer=printer,
         ))
         try:
             print_file(file_to_print, printer, copies, self._devmode)
             self._copies.set(1)
-            self.status_text.set(i18n.t("status_sent", file=os.path.basename(file_to_print)))
+            self.status_text.set(i18n.t("status_sent", file=filename))
+            self._log(i18n.t("log_printed", barcode=barcode, file=filename, printer=printer, copies=copies))
         except Exception as e:
             messagebox.showerror(i18n.t("dlg_printer_error_title"), str(e))
             self.status_text.set(i18n.t("status_print_failed"))
+            self._log(i18n.t("log_print_failed", barcode=barcode, file=filename, error=str(e)), error=True)
 
     def _pick_file(self, files):
         dialog = tk.Toplevel(self.root)
