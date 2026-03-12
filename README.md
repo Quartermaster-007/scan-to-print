@@ -70,7 +70,7 @@ scan-to-print/
   speedcheck.py      # Scanner speed check window
   updater.py         # GitHub release check and in-app self-update
   version.py         # __version__ placeholder, overwritten by CI at build time
-  build.py           # Branch-aware build script (dist/<branch>/ScanToPrint.exe)
+  build.py           # Build script — outputs to dist/ with version+branch in the exe name
   test_scan.py       # Simulates USB scanner input for testing without hardware
   requirements.txt   # Python dependencies
   ScanToPrint.spec   # PyInstaller build spec
@@ -83,7 +83,7 @@ scan-to-print/
 python build.py
 ```
 
-Output: `dist/<branch>/ScanToPrint.exe` — runs on Windows without Python installed.
+Output: `dist/ScanToPrint.exe` (main branch) or `dist/ScanToPrint <version> <branch>.exe` (other branches) — runs on Windows without Python installed.
 
 ## Testing without a scanner
 
