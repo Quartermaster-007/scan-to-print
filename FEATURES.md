@@ -178,7 +178,6 @@ Right-click menu should include
 - `_apply_language()` calls `_tray.update_menu()` so the tray menu strings are rebuilt immediately when the UI language changes
 - `_restore_from_tray()` temporarily sets `-topmost True` before `lift()`/`focus_force()` then removes it after 100 ms — required on Windows to reliably steal foreground focus (e.g. when restoring from a balloon notification click)
 - `file_version_info.py`: PyInstaller version resource embedded in the exe; sets `FileDescription = "Scan to Print"` so Windows shows a readable name in tray/taskbar notification settings instead of the raw `.exe` filename; version tuples and strings are stamped by `build.py` and CI at build time
-- `build.py --clean-tray`: deletes `IconStreams` and `PastIconsStream` from `HKCU\...\TrayNotify` to wipe Windows' accumulated tray icon history (affects all apps; Explorer restart required)
 
 ---
 
