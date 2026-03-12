@@ -41,6 +41,15 @@ scan-to-print/
   images/            # App icons (scan-to-print.ico, scan-to-print.png)
 ```
 
+## Feature workflow
+When implementing a feature:
+1. **Create a feature branch** before writing any code — branch name should reflect the feature (e.g. `feature/print-copies`)
+2. **Implement the feature** on that branch
+3. **Update documentation** before creating a PR:
+   - Mark the feature as `[x]` in the Status list in this file
+   - Add implementation notes to the relevant feature section in `FEATURES.md`
+4. **Create a PR** from the feature branch into `main` (squash merge only; never push directly to main)
+
 ## Key decisions
 - Files in the source folder must be named exactly as the barcode value (any extension)
 - If multiple files match a barcode (different extensions), show a dialog to pick one
@@ -67,7 +76,7 @@ scan-to-print/
 - [ ] Print history / log (#1)
 - [ ] Failure sound feedback (#2)
 - [x] Direct silent printing — pypdfium2 + Pillow, no dialog (#9)
-- [ ] Print copies input (#5)
+- [x] Print copies input (#5)
 - [ ] System tray (#7)
 - [ ] Language prefix (#12)
 - [x] Packaged as .exe — CI builds via PyInstaller on `windows-latest`, published as GitHub Release

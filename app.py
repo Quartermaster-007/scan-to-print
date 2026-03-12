@@ -28,6 +28,7 @@ class ScanToPrintApp:
         self.selected_printer = tk.StringVar()
         self.status_text = tk.StringVar(value="Ready. Scan a barcode to print.")
         self._update_channel = tk.StringVar(value=self._settings["updates"]["channel"])
+        self._copies = tk.IntVar(value=1)
 
         self._build_menu()
         self._build_ui()
@@ -146,6 +147,14 @@ class ScanToPrintApp:
         self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e")
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
         tk.Label(scan_frame, text="Auto-scan").grid(row=0, column=2, padx=(0, 8))
+
+        copies_frame = tk.Frame(scan_frame)
+        copies_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=(0, 8), sticky="w")
+        tk.Label(copies_frame, text="Copies:").pack(side="left")
+        ttk.Spinbox(
+            copies_frame, from_=1, to=99, textvariable=self._copies,
+            width=4, justify="center",
+        ).pack(side="left", padx=(4, 0))
 
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
@@ -320,9 +329,11 @@ class ScanToPrintApp:
         else:
             file_to_print = os.path.join(folder, matches[0])
 
+        copies = self._copies.get()
         self.status_text.set(f"Printing: {os.path.basename(file_to_print)} on {printer}...")
         try:
-            print_file(file_to_print, printer)
+            print_file(file_to_print, printer, copies)
+            self._copies.set(1)
             self.status_text.set(f"Sent to printer: {os.path.basename(file_to_print)}")
         except Exception as e:
             messagebox.showerror("Print error", str(e))
