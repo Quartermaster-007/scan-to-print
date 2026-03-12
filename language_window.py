@@ -22,6 +22,7 @@ class LanguageWindow:
         self._win = tk.Toplevel(parent)
         self._win.title(i18n.t("lang_window_title"))
         self._win.resizable(False, False)
+        self._win.transient(parent)
         self._win.grab_set()
 
         self._selected = tk.StringVar(value=current_lang)
