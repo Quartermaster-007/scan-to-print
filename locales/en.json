@@ -61,5 +61,20 @@
   "lang_window_title": "Language",
   "lang_window_label": "Select language:",
   "btn_apply": "Apply",
-  "btn_cancel": "Cancel"
+  "btn_cancel": "Cancel",
+
+  "updater_downloading_title": "Downloading update",
+  "updater_downloading_label": "Downloading version {tag}\u2026",
+  "updater_connecting": "Connecting\u2026",
+  "updater_available_title": "Update available",
+  "updater_available_msg": "Version {tag} is available.",
+  "updater_update_now_prompt": "Would you like to update now?",
+  "updater_manual_prompt": "Open the download page to install manually?",
+  "btn_update_now": "Update now",
+  "btn_download_manually": "Download manually",
+  "btn_later": "Later",
+  "updater_failed_title": "Update failed",
+  "updater_failed_msg": "Download failed:\n{error}\n\nPlease download the update manually.",
+  "updater_uptodate_title": "No updates",
+  "updater_uptodate_msg": "You are up to date."
 }
