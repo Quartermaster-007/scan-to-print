@@ -215,7 +215,7 @@ class ScanToPrintApp:
         # --- Scan area ---
         scan_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_scan"))
         scan_frame.grid(row=3, column=0, sticky="ew", **pad)
-        scan_frame.columnconfigure(1, weight=1)  # col 1 (entry) expands; col 0 (combo) is fixed
+        scan_frame.columnconfigure(2, weight=1)  # col 2 (entry) expands; cols 0-1 (combo, dash) are fixed
 
         # Prefix combo sits in col 0 before the entry; hidden when feature is off
         from language_window import AVAILABLE_PREFIX_LANGUAGES
@@ -230,16 +230,18 @@ class ScanToPrintApp:
             values=prefix_options, state="readonly", width=16,
         )
         self._prefix_combo.bind("<<ComboboxSelected>>", self._on_prefix_lang_changed)
+        self._prefix_dash = ttk.Label(scan_frame, text="-", font=("Courier", 14))
         if self._prefix_enabled:
-            self._prefix_combo.grid(row=0, column=0, padx=(5, 2), pady=10)
+            self._prefix_combo.grid(row=0, column=0, padx=(5, 0), pady=10)
+            self._prefix_dash.grid(row=0, column=1, padx=(2, 2))
 
         self.barcode_entry = ttk.Entry(scan_frame, font=("Courier", 14))
-        self.barcode_entry.grid(row=0, column=1, padx=(0, 5), pady=10, sticky="ew")
+        self.barcode_entry.grid(row=0, column=2, padx=(0, 5), pady=10, sticky="ew")
         self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e", cursor="hand2")
-        self._scan_indicator.grid(row=0, column=2, padx=(6, 2))
+        self._scan_indicator.grid(row=0, column=3, padx=(6, 2))
         self._scan_indicator.bind("<Button-1>", lambda _e: self._toggle_scanner())
         self._scan_label = tk.Label(scan_frame, text=i18n.t("lbl_autoscan"), cursor="hand2")
-        self._scan_label.grid(row=0, column=3, padx=(0, 8))
+        self._scan_label.grid(row=0, column=4, padx=(0, 8))
         self._scan_label.bind("<Button-1>", lambda _e: self._toggle_scanner())
 
         # --- Log ---
@@ -496,9 +498,11 @@ class ScanToPrintApp:
         )
         self._prefix_lang_var.set(current_display)
         if self._prefix_enabled:
-            self._prefix_combo.grid(row=0, column=0, padx=(5, 2), pady=10)
+            self._prefix_combo.grid(row=0, column=0, padx=(5, 0), pady=10)
+            self._prefix_dash.grid(row=0, column=1, padx=(2, 2))
         else:
             self._prefix_combo.grid_remove()
+            self._prefix_dash.grid_remove()
         self._rebuild_prefix_recent_menu()
         if hasattr(self, "_tray"):
             self._tray.update_menu()
