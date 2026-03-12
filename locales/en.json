@@ -1,0 +1,65 @@
+{
+  "frame_folder": "1. Select folder",
+  "frame_printer": "2. Select printer",
+  "frame_print_settings": "3. Print settings",
+  "frame_scan": "4. Scan barcode",
+
+  "btn_browse": "Browse...",
+  "lbl_copies": "Copies:",
+  "btn_printer_settings": "Printer settings...",
+  "btn_reset_defaults": "Reset to defaults",
+  "lbl_autoscan": "Auto-scan",
+
+  "status_ready": "Ready. Scan a barcode to print.",
+  "status_barcode_received": "Barcode received: {barcode}",
+  "status_no_file": "No file found for barcode: {barcode}",
+  "status_printing": "Printing: {file} on {printer}...",
+  "status_sent": "Sent to printer: {file}",
+  "status_print_failed": "Print failed.",
+
+  "menu_file": "File",
+  "menu_preferences": "Preferences",
+  "menu_open_settings": "Open settings file...",
+  "menu_update_channel": "Update channel",
+  "menu_stable": "Stable releases",
+  "menu_prerelease": "Pre-releases",
+  "menu_language": "Language...",
+  "menu_exit": "Exit",
+
+  "menu_scanner": "Scanner",
+  "menu_pause_scan": "Pause auto-scan",
+  "menu_resume_scan": "Resume auto-scan",
+  "menu_speed_check": "Speed check...",
+
+  "menu_help": "Help",
+  "menu_check_updates": "Check for updates",
+  "menu_about": "About Scan to Print",
+
+  "dlg_no_folder_title": "No folder",
+  "dlg_no_folder_msg": "Please select a folder first.",
+  "dlg_no_printer_title": "No printer",
+  "dlg_no_printer_msg": "Please select a printer first.",
+  "dlg_multi_title": "Multiple files found",
+  "dlg_multi_msg": "Multiple files match. Select one:",
+  "btn_print_this": "Print this one",
+  "dlg_printer_error_title": "Printer settings error",
+
+  "about_title": "About Scan to Print",
+  "about_app_name": "Scan to Print",
+  "about_tagline": "Scan a barcode \u2192 print the file",
+  "btn_check_updates": "Check for updates",
+  "btn_close": "Close",
+
+  "speedcheck_title": "Scanner Speed Check",
+  "speedcheck_intro": "Scan any barcode to measure your scanner's speed.\nThe app will suggest a safe threshold with margin.",
+  "speedcheck_max_gap": "Max gap between keys:",
+  "speedcheck_suggested": "Suggested threshold:",
+  "speedcheck_current": "Current threshold:",
+  "btn_apply_save": "Apply & Save",
+  "btn_reset_default": "Reset to Default",
+
+  "lang_window_title": "Language",
+  "lang_window_label": "Select language:",
+  "btn_apply": "Apply",
+  "btn_cancel": "Cancel"
+}

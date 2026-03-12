@@ -6,12 +6,14 @@ import tkinter as tk
 import webbrowser
 from tkinter import ttk, filedialog, messagebox
 
+import i18n
 import settings
 import updater
 from version import __version__
 from printer import get_printers, get_default_printer, print_file
 from scanner import BarcodeScanner
 from speedcheck import SpeedcheckWindow
+from language_window import LanguageWindow
 
 GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
@@ -25,9 +27,13 @@ class ScanToPrintApp:
 
         self._settings = settings.load()
 
+        # Load language before building any UI
+        self._language = self._settings["ui"]["language"]
+        i18n.load(self._language)
+
         self.folder_path = tk.StringVar(value=self._settings["workspace"]["folder"])
         self.selected_printer = tk.StringVar()
-        self.status_text = tk.StringVar(value="Ready. Scan a barcode to print.")
+        self.status_text = tk.StringVar(value=i18n.t("status_ready"))
         self._update_channel = tk.StringVar(value=self._settings["updates"]["channel"])
         self._copies = tk.IntVar(value=1)
         self._devmode = None
@@ -70,41 +76,51 @@ class ScanToPrintApp:
         file_menu = tk.Menu(menubar, tearoff=0)
 
         prefs_menu = tk.Menu(file_menu, tearoff=0)
-        prefs_menu.add_command(label="Open settings file...", command=self._open_settings_file)
+        prefs_menu.add_command(
+            label=i18n.t("menu_open_settings"), command=self._open_settings_file
+        )
         prefs_menu.add_separator()
         channel_menu = tk.Menu(prefs_menu, tearoff=0)
         channel_menu.add_radiobutton(
-            label="Stable releases",
+            label=i18n.t("menu_stable"),
             variable=self._update_channel,
             value="stable",
             command=self._on_channel_changed,
         )
         channel_menu.add_radiobutton(
-            label="Pre-releases",
+            label=i18n.t("menu_prerelease"),
             variable=self._update_channel,
             value="prerelease",
             command=self._on_channel_changed,
         )
-        prefs_menu.add_cascade(label="Update channel", menu=channel_menu)
+        prefs_menu.add_cascade(label=i18n.t("menu_update_channel"), menu=channel_menu)
+        prefs_menu.add_separator()
+        prefs_menu.add_command(label=i18n.t("menu_language"), command=self._open_language_window)
 
-        file_menu.add_cascade(label="Preferences", menu=prefs_menu)
+        file_menu.add_cascade(label=i18n.t("menu_preferences"), menu=prefs_menu)
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self._on_close)
-        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label=i18n.t("menu_exit"), command=self._on_close)
+        menubar.add_cascade(label=i18n.t("menu_file"), menu=file_menu)
 
         # Scanner menu
         self._scanner_menu = tk.Menu(menubar, tearoff=0)
-        self._scanner_menu.add_command(label="Pause auto-scan", command=self._toggle_scanner)
+        self._scanner_menu.add_command(
+            label=i18n.t("menu_pause_scan"), command=self._toggle_scanner
+        )
         self._scanner_menu.add_separator()
-        self._scanner_menu.add_command(label="Speed check...", command=self._open_speedcheck)
-        menubar.add_cascade(label="Scanner", menu=self._scanner_menu)
+        self._scanner_menu.add_command(
+            label=i18n.t("menu_speed_check"), command=self._open_speedcheck
+        )
+        menubar.add_cascade(label=i18n.t("menu_scanner"), menu=self._scanner_menu)
 
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="Check for updates", command=self._check_for_updates_manual)
+        help_menu.add_command(
+            label=i18n.t("menu_check_updates"), command=self._check_for_updates_manual
+        )
         help_menu.add_separator()
-        help_menu.add_command(label="About Scan to Print", command=self._open_about)
-        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label=i18n.t("menu_about"), command=self._open_about)
+        menubar.add_cascade(label=i18n.t("menu_help"), menu=help_menu)
 
         self.root.config(menu=menubar)
 
@@ -113,19 +129,19 @@ class ScanToPrintApp:
         self.root.columnconfigure(0, weight=1)
 
         # --- Folder selection ---
-        folder_frame = ttk.LabelFrame(self.root, text="1. Select folder")
+        folder_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_folder"))
         folder_frame.grid(row=0, column=0, sticky="ew", **pad)
         folder_frame.columnconfigure(0, weight=1)
 
         ttk.Entry(folder_frame, textvariable=self.folder_path, width=45).grid(
             row=0, column=0, padx=5, pady=5, sticky="ew"
         )
-        ttk.Button(folder_frame, text="Browse...", command=self._browse_folder).grid(
-            row=0, column=1, padx=5
-        )
+        ttk.Button(
+            folder_frame, text=i18n.t("btn_browse"), command=self._browse_folder
+        ).grid(row=0, column=1, padx=5)
 
         # --- Printer selection ---
-        printer_frame = ttk.LabelFrame(self.root, text="2. Select printer")
+        printer_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_printer"))
         printer_frame.grid(row=1, column=0, sticky="ew", **pad)
         printer_frame.columnconfigure(0, weight=1)
 
@@ -140,25 +156,27 @@ class ScanToPrintApp:
         self.printer_combo.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
         # --- Print settings ---
-        print_frame = ttk.LabelFrame(self.root, text="3. Print settings")
+        print_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_print_settings"))
         print_frame.grid(row=2, column=0, sticky="ew", **pad)
 
-        tk.Label(print_frame, text="Copies:").grid(row=0, column=0, padx=(8, 4), pady=8, sticky="w")
+        tk.Label(print_frame, text=i18n.t("lbl_copies")).grid(
+            row=0, column=0, padx=(8, 4), pady=8, sticky="w"
+        )
         ttk.Spinbox(
             print_frame, from_=1, to=99, textvariable=self._copies,
             width=4, justify="center",
         ).grid(row=0, column=1, pady=8, sticky="w")
         ttk.Button(
-            print_frame, text="Printer settings...", command=self._open_printer_settings,
+            print_frame, text=i18n.t("btn_printer_settings"), command=self._open_printer_settings,
         ).grid(row=0, column=2, padx=(16, 8), pady=8, sticky="w")
         self._reset_settings_btn = ttk.Button(
-            print_frame, text="Reset to defaults", command=self._reset_printer_settings,
+            print_frame, text=i18n.t("btn_reset_defaults"), command=self._reset_printer_settings,
             state=tk.NORMAL if self._devmode is not None else tk.DISABLED,
         )
         self._reset_settings_btn.grid(row=0, column=3, padx=(0, 8), pady=8, sticky="w")
 
         # --- Scan area ---
-        scan_frame = ttk.LabelFrame(self.root, text="4. Scan barcode")
+        scan_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_scan"))
         scan_frame.grid(row=3, column=0, sticky="ew", **pad)
         scan_frame.columnconfigure(0, weight=1)
 
@@ -166,7 +184,7 @@ class ScanToPrintApp:
         self.barcode_entry.grid(row=0, column=0, padx=5, pady=10, sticky="ew")
         self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e")
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
-        tk.Label(scan_frame, text="Auto-scan").grid(row=0, column=2, padx=(0, 8))
+        tk.Label(scan_frame, text=i18n.t("lbl_autoscan")).grid(row=0, column=2, padx=(0, 8))
 
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
@@ -219,6 +237,7 @@ class ScanToPrintApp:
             "ui": {
                 "window_width": w if w > 1 else 0,
                 "window_height": h if h > 1 else 0,
+                "language": self._language,
             },
             "scanner": {
                 "auto_scan": not self.scanner.paused,
@@ -250,6 +269,31 @@ class ScanToPrintApp:
         os.startfile(path)
 
     # ------------------------------------------------------------------
+    # Language
+    # ------------------------------------------------------------------
+
+    def _open_language_window(self):
+        def on_apply(lang_code: str):
+            if lang_code == self._language:
+                return
+            self._language = lang_code
+            self._save_settings()
+            i18n.load(lang_code)
+            self._apply_language()
+
+        LanguageWindow(self.root, self._language, on_apply)
+
+    def _apply_language(self):
+        """Rebuild all widgets in the current language."""
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        self._build_menu()
+        self._build_ui()
+        self._apply_printer()
+        self._update_scan_indicator()
+        self.barcode_entry.bind("<Return>", self._on_manual_entry)
+
+    # ------------------------------------------------------------------
     # UI actions
     # ------------------------------------------------------------------
 
@@ -271,10 +315,10 @@ class ScanToPrintApp:
     def _update_scan_indicator(self):
         if self.scanner.paused:
             self._scan_indicator.config(fg="#9ca3af")
-            self._scanner_menu.entryconfig(0, label="Resume auto-scan")
+            self._scanner_menu.entryconfig(0, label=i18n.t("menu_resume_scan"))
         else:
             self._scan_indicator.config(fg="#22c55e")
-            self._scanner_menu.entryconfig(0, label="Pause auto-scan")
+            self._scanner_menu.entryconfig(0, label=i18n.t("menu_pause_scan"))
 
     def _toggle_scanner(self):
         self.scanner.toggle()
@@ -290,7 +334,9 @@ class ScanToPrintApp:
     def _open_printer_settings(self):
         printer = self.selected_printer.get()
         if not printer:
-            messagebox.showwarning("No printer", "Please select a printer first.")
+            messagebox.showwarning(
+                i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg")
+            )
             return
         try:
             import win32print
@@ -308,7 +354,7 @@ class ScanToPrintApp:
             finally:
                 win32print.ClosePrinter(hPrinter)
         except Exception as e:
-            messagebox.showerror("Printer settings error", str(e))
+            messagebox.showerror(i18n.t("dlg_printer_error_title"), str(e))
 
     def _reset_printer_settings(self):
         self._set_devmode(None)
@@ -325,13 +371,13 @@ class ScanToPrintApp:
 
     def _open_about(self):
         dlg = tk.Toplevel(self.root)
-        dlg.title("About Scan to Print")
+        dlg.title(i18n.t("about_title"))
         dlg.resizable(False, False)
         dlg.grab_set()
 
-        tk.Label(dlg, text="Scan to Print", font=("TkDefaultFont", 14, "bold")).pack(pady=(20, 4))
+        tk.Label(dlg, text=i18n.t("about_app_name"), font=("TkDefaultFont", 14, "bold")).pack(pady=(20, 4))
         tk.Label(dlg, text=f"Version {__version__}").pack()
-        tk.Label(dlg, text="Scan a barcode → print the file").pack(pady=(4, 12))
+        tk.Label(dlg, text=i18n.t("about_tagline")).pack(pady=(4, 12))
 
         link = tk.Label(dlg, text="github.com/Quartermaster-007/scan-to-print",
                         fg="blue", cursor="hand2")
@@ -342,28 +388,32 @@ class ScanToPrintApp:
 
         btn_frame = tk.Frame(dlg)
         btn_frame.pack(pady=(0, 16))
-        ttk.Button(btn_frame, text="Check for updates", command=lambda: [
+        ttk.Button(btn_frame, text=i18n.t("btn_check_updates"), command=lambda: [
             dlg.destroy(),
             self._check_for_updates_manual(),
         ]).pack(side="left", padx=6)
-        ttk.Button(btn_frame, text="Close", command=dlg.destroy).pack(side="left", padx=6)
+        ttk.Button(btn_frame, text=i18n.t("btn_close"), command=dlg.destroy).pack(side="left", padx=6)
 
     def _on_barcode(self, barcode):
-        self.status_text.set(f"Barcode received: {barcode}")
+        self.status_text.set(i18n.t("status_barcode_received", barcode=barcode))
         folder = self.folder_path.get()
         printer = self.selected_printer.get()
 
         if not folder:
-            messagebox.showwarning("No folder", "Please select a folder first.")
+            messagebox.showwarning(
+                i18n.t("dlg_no_folder_title"), i18n.t("dlg_no_folder_msg")
+            )
             return
         if not printer:
-            messagebox.showwarning("No printer", "Please select a printer first.")
+            messagebox.showwarning(
+                i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg")
+            )
             return
 
         matches = [f for f in os.listdir(folder) if os.path.splitext(f)[0] == barcode]
 
         if not matches:
-            self.status_text.set(f"No file found for barcode: {barcode}")
+            self.status_text.set(i18n.t("status_no_file", barcode=barcode))
             return
 
         if len(matches) > 1:
@@ -375,22 +425,26 @@ class ScanToPrintApp:
             file_to_print = os.path.join(folder, matches[0])
 
         copies = self._copies.get()
-        self.status_text.set(f"Printing: {os.path.basename(file_to_print)} on {printer}...")
+        self.status_text.set(i18n.t(
+            "status_printing",
+            file=os.path.basename(file_to_print),
+            printer=printer,
+        ))
         try:
             print_file(file_to_print, printer, copies, self._devmode)
             self._copies.set(1)
-            self.status_text.set(f"Sent to printer: {os.path.basename(file_to_print)}")
+            self.status_text.set(i18n.t("status_sent", file=os.path.basename(file_to_print)))
         except Exception as e:
-            messagebox.showerror("Print error", str(e))
-            self.status_text.set("Print failed.")
+            messagebox.showerror(i18n.t("dlg_printer_error_title"), str(e))
+            self.status_text.set(i18n.t("status_print_failed"))
 
     def _pick_file(self, files):
         dialog = tk.Toplevel(self.root)
-        dialog.title("Multiple files found")
+        dialog.title(i18n.t("dlg_multi_title"))
         dialog.grab_set()
         chosen = tk.StringVar()
 
-        ttk.Label(dialog, text="Multiple files match. Select one:").pack(padx=10, pady=5)
+        ttk.Label(dialog, text=i18n.t("dlg_multi_msg")).pack(padx=10, pady=5)
         lb = tk.Listbox(dialog, listvariable=tk.StringVar(value=files), height=6, width=40)
         lb.pack(padx=10, pady=5)
         lb.selection_set(0)
@@ -401,7 +455,7 @@ class ScanToPrintApp:
                 chosen.set(files[sel[0]])
             dialog.destroy()
 
-        ttk.Button(dialog, text="Print this one", command=confirm).pack(pady=5)
+        ttk.Button(dialog, text=i18n.t("btn_print_this"), command=confirm).pack(pady=5)
         self.root.wait_window(dialog)
         return chosen.get()
 

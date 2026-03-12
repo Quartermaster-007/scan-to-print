@@ -9,6 +9,8 @@ import time
 import tkinter as tk
 from tkinter import ttk
 
+import i18n
+
 try:
     from pynput import keyboard
     _PYNPUT_AVAILABLE = True
@@ -39,7 +41,7 @@ class SpeedcheckWindow:
         self._listener = None
 
         self._win = tk.Toplevel(parent)
-        self._win.title("Scanner Speed Check")
+        self._win.title(i18n.t("speedcheck_title"))
         self._win.resizable(False, False)
         self._win.grab_set()
 
@@ -56,8 +58,7 @@ class SpeedcheckWindow:
 
         ttk.Label(
             self._win,
-            text="Scan any barcode to measure your scanner's speed.\n"
-                 "The app will suggest a safe threshold with margin.",
+            text=i18n.t("speedcheck_intro"),
             justify="left",
         ).grid(row=0, column=0, columnspan=2, sticky="w", **pad)
 
@@ -67,12 +68,12 @@ class SpeedcheckWindow:
 
         # Results grid
         labels = [
-            ("Max gap between keys:", "_gap_var", "-- ms"),
-            ("Suggested threshold:",  "_sugg_var", "-- ms"),
-            ("Current threshold:",    "_curr_var", f"{current_threshold} ms"),
+            ("speedcheck_max_gap",  "_gap_var",  "-- ms"),
+            ("speedcheck_suggested", "_sugg_var", "-- ms"),
+            ("speedcheck_current",   "_curr_var", f"{current_threshold} ms"),
         ]
-        for i, (text, attr, default) in enumerate(labels):
-            ttk.Label(self._win, text=text, anchor="w").grid(
+        for i, (key, attr, default) in enumerate(labels):
+            ttk.Label(self._win, text=i18n.t(key), anchor="w").grid(
                 row=2 + i, column=0, sticky="w", padx=(12, 4), pady=2
             )
             var = tk.StringVar(value=default)
@@ -90,16 +91,16 @@ class SpeedcheckWindow:
         btn_frame.grid(row=6, column=0, columnspan=2, pady=(0, 12))
 
         self._apply_btn = ttk.Button(
-            btn_frame, text="Apply & Save", command=self._apply, state="disabled"
+            btn_frame, text=i18n.t("btn_apply_save"), command=self._apply, state="disabled"
         )
         self._apply_btn.pack(side="left", padx=6)
 
-        ttk.Button(btn_frame, text="Reset to Default", command=self._reset).pack(
-            side="left", padx=6
-        )
-        ttk.Button(btn_frame, text="Close", command=self._close).pack(
-            side="left", padx=6
-        )
+        ttk.Button(
+            btn_frame, text=i18n.t("btn_reset_default"), command=self._reset
+        ).pack(side="left", padx=6)
+        ttk.Button(
+            btn_frame, text=i18n.t("btn_close"), command=self._close
+        ).pack(side="left", padx=6)
 
     # ------------------------------------------------------------------
     # Listener
