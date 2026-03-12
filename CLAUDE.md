@@ -59,14 +59,14 @@ scan-to-print/
 - [x] GUI layout done
 - [x] Printer selection working
 - [x] Barcode input working (focus-based, superseded)
-- [x] Print job working (ShellExecute — to be replaced by pypdfium2/Pillow in Feature 9)
+- [x] Print job working (direct GDI via pypdfium2/Pillow — no dialog, no default-printer side effect)
 - [x] Persistent settings (#3) — `settings.py`, File menu, window size, last folder/printer
 - [x] Auto scan-to-print / global keyboard hook (#10) — `pynput` listener, pause toggle, speed check window
 - [x] GitHub update check + in-app self-update (#13) — `updater.py`, `version.py`, `.github/workflows/release.yml`
 - [ ] UI language selection (#11)
 - [ ] Print history / log (#1)
 - [ ] Failure sound feedback (#2)
-- [ ] Improved printer targeting — pypdfium2 + Pillow (#9)
+- [x] Direct silent printing — pypdfium2 + Pillow, no dialog (#9)
 - [ ] Print copies input (#5)
 - [ ] System tray (#7)
 - [ ] Language prefix (#12)

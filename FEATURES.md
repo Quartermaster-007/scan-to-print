@@ -159,9 +159,9 @@ Register the app to launch automatically when Windows starts.
 
 ---
 
-## Feature 9 — Network/shared printer support improvements
+## Feature 9 — Direct silent printing (no dialog, no default-printer side effect) ✅ Implemented
 
-Currently, `SetDefaultPrinter` is called before each print, which is a Windows side effect. A cleaner approach would print directly to a named printer without changing the system default.
+Currently, `SetDefaultPrinter` is called before each print and `ShellExecute` is used to trigger printing, which opens the application's print dialog and temporarily changes the system default printer. The fix is to print directly to a named printer without any UI or side effects.
 
 **Questions to answer before building:**
 - Is the current side effect (temporarily changing default printer) causing any real problems in your environment?
@@ -184,6 +184,15 @@ The logic for selecting the printer should be:
 - **PDF**: `pypdfium2` (Apache 2.0) renders each page to a bitmap in-process, sent to the named printer via `win32print` / GDI. No external exe, no subprocess overhead.
 - **Images (PNG, JPG)**: `Pillow` opens the image and sends it to the named printer via `win32print` / GDI.
 - Both are pure pip dependencies — no bundled executables, keeping the `.exe` size minimal.
+
+**Implementation notes:**
+- `printer.py` — `print_file(file_path, printer_name)` dispatches to `_print_pdf` or `_print_image` based on file extension; raises `ValueError` for unsupported types
+- **PDF**: `pypdfium2` opens the document, renders each page to a bitmap at the printer's native DPI (`LOGPIXELSX / 72`), converted to RGB PIL image and drawn via `ImageWin.Dib` to a GDI printer DC
+- **Images (PNG, JPG, BMP, GIF, TIFF)**: `Pillow` opens and converts to RGB, drawn the same way
+- Both paths use `win32ui.CreateDC().CreatePrinterDC(printer_name)` — `SetDefaultPrinter` is never called
+- Pages/images are scaled to fit the printable area (`HORZRES` × `VERTRES`) while preserving aspect ratio
+- `AbortDoc` is called on any exception so the printer does not receive a partial job
+- `build.py` updated to stamp `version.py` before building (default `9999.0.0`) so local dev builds never trigger the updater; `--version` flag allows overriding
 
 ---
 
@@ -260,10 +269,10 @@ Once you've filled in the features you want, list them here in the order you'd l
 1. #3 — Persistent settings
 2. #10 — Auto scan-to-print
 3. #13 — App updates via Github
-4. #11 — Language selection for UI
-5. #1 — Print history / log
-6. #2 — Sound / visual feedback on scan
-7. #9 — Network/shared printer support improvements
-8. #5 — Print copies / print options
+4. #9 — Direct silent printing (no dialog, no default-printer side effect)
+5. #5 — Print copies / print options
+6. #11 — Language selection for UI
+7. #1 — Print history / log
+8. #2 — Sound / visual feedback on scan
 9. #7 — System tray / minimise to tray
 10. #12 — Language selection for prefix
