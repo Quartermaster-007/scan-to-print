@@ -1,12 +1,17 @@
 """
-Build script — outputs ScanToPrint.exe to dist/<branch>/ so builds
-from different branches don't overwrite each other.
+Build script — outputs all builds to dist/ with a name that encodes
+the version and branch for non-main builds.
+
+Output name format:
+    main branch  →  ScanToPrint.exe
+    other branch →  ScanToPrint <version> <branch>.exe
 
 Usage:
     python build.py                        # stamps version as 9999.0.0 (dev sentinel)
     python build.py --version 2026.03.11   # stamps a specific version
 """
 import argparse
+import os
 import subprocess
 import sys
 
@@ -37,9 +42,15 @@ subprocess.run(
         sys.executable, "-m", "PyInstaller",
         "ScanToPrint.spec",
         "--noconfirm",
-        f"--distpath=dist/{branch}",
+        "--distpath=dist",
     ],
     check=True,
 )
 
-print(f"\nOutput: dist/{branch}/ScanToPrint.exe")
+if branch == "main":
+    exe_name = "ScanToPrint"
+else:
+    exe_name = f"ScanToPrint {args.version} {branch}"
+    os.replace("dist/ScanToPrint.exe", f"dist/{exe_name}.exe")
+
+print(f"\nOutput: dist/{exe_name}.exe")
