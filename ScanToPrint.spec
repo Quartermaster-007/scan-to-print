@@ -62,4 +62,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon='images/scan-to-print.ico',
+    version='file_version_info.py',
 )
