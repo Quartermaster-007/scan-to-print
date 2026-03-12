@@ -76,5 +76,12 @@
   "updater_failed_title": "Update failed",
   "updater_failed_msg": "Download failed:\n{error}\n\nPlease download the update manually.",
   "updater_uptodate_title": "No updates",
-  "updater_uptodate_msg": "You are up to date."
+  "updater_uptodate_msg": "You are up to date.",
+
+  "frame_log": "5. Print log",
+  "log_printed": "OK  barcode={barcode}  file={file}  printer={printer}  copies={copies}",
+  "log_no_file": "ERR barcode={barcode}  no matching file found",
+  "log_no_folder": "ERR barcode={barcode}  no folder selected",
+  "log_no_printer": "ERR barcode={barcode}  no printer selected",
+  "log_print_failed": "ERR barcode={barcode}  file={file}  {error}"
 }

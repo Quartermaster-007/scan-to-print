@@ -73,7 +73,7 @@ When implementing a feature:
 - [x] Auto scan-to-print / global keyboard hook — `pynput` listener, pause toggle, speed check window
 - [x] GitHub update check + in-app self-update — `updater.py`, `version.py`, `.github/workflows/release.yml`
 - [x] UI language selection
-- [ ] Print history / log
+- [x] Print history / log
 - [ ] Failure sound feedback
 - [x] Direct silent printing — pypdfium2 + Pillow, no dialog
 - [x] Print copies input + printer options dialog
