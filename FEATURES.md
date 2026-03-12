@@ -176,7 +176,9 @@ Right-click menu should include
 - `build_status_icon(paused)` in `tray.py` loads `images/scan-to-print.png` (PIL fallback: solid blue square) and overlays a green (`#22c55e`) or grey (`#9ca3af`) dot in the bottom-right corner — matching the in-app `●` indicator colours
 - Both the tray icon and the window title-bar/taskbar icon reflect scan state: `_update_window_icon()` calls `root.iconphoto()` with an `ImageTk.PhotoImage`; icon is updated on startup and on every pause/resume toggle
 - `_apply_language()` calls `_tray.update_menu()` so the tray menu strings are rebuilt immediately when the UI language changes
-- Build: no spec changes needed — `images/scan-to-print.png` was already bundled, `tray.py` is auto-discovered, `PIL.ImageDraw`/`ImageTk` are part of the existing Pillow dependency
+- `_restore_from_tray()` temporarily sets `-topmost True` before `lift()`/`focus_force()` then removes it after 100 ms — required on Windows to reliably steal foreground focus (e.g. when restoring from a balloon notification click)
+- `file_version_info.py`: PyInstaller version resource embedded in the exe; sets `FileDescription = "Scan to Print"` so Windows shows a readable name in tray/taskbar notification settings instead of the raw `.exe` filename; version tuples and strings are stamped by `build.py` and CI at build time
+- `build.py --clean-tray`: deletes `IconStreams` and `PastIconsStream` from `HKCU\...\TrayNotify` to wipe Windows' accumulated tray icon history (affects all apps; Explorer restart required)
 
 ---
 
