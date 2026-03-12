@@ -114,6 +114,7 @@
   "tray_exit": "Exit",
   "tray_pause_scan": "Pause auto-scan",
   "tray_resume_scan": "Resume auto-scan",
+  "tray_prefix_enable": "Language prefix",
   "tray_notify_no_file_title": "No file found",
   "tray_notify_no_file_msg": "No file found for barcode: {barcode}",
 

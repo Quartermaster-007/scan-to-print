@@ -84,6 +84,7 @@ class ScanToPrintApp:
             get_prefix_enabled=lambda: self._prefix_enabled,
             get_recent_prefix=lambda: list(self._prefix_recent),
             get_prefix_lang=lambda: self._prefix_lang,
+            on_toggle_prefix=self._toggle_prefix,
             on_set_prefix_lang=self._set_prefix_lang,
         )
         self._tray.start()
@@ -534,6 +535,12 @@ class ScanToPrintApp:
             return
         self._prefix_lang = code
         self._push_prefix_recent(code)
+        self._save_settings()
+        self._apply_prefix_ui()
+
+    def _toggle_prefix(self):
+        """Toggle the language prefix feature on/off (called from tray)."""
+        self._prefix_enabled = not self._prefix_enabled
         self._save_settings()
         self._apply_prefix_ui()
 

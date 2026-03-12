@@ -114,6 +114,7 @@
   "tray_exit": "Afsluiten",
   "tray_pause_scan": "Auto-scan pauzeren",
   "tray_resume_scan": "Auto-scan hervatten",
+  "tray_prefix_enable": "Taalprefix",
   "tray_notify_no_file_title": "Geen bestand gevonden",
   "tray_notify_no_file_msg": "Geen bestand gevonden voor barcode: {barcode}",
 
