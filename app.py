@@ -16,6 +16,7 @@ from speedcheck import SpeedcheckWindow
 GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
 
+
 class ScanToPrintApp:
     def __init__(self):
         self.root = tk.Tk()
@@ -150,6 +151,11 @@ class ScanToPrintApp:
         ttk.Button(
             print_frame, text="Printer settings...", command=self._open_printer_settings,
         ).grid(row=0, column=2, padx=(16, 8), pady=8, sticky="w")
+        self._reset_settings_btn = ttk.Button(
+            print_frame, text="Reset to defaults", command=self._reset_printer_settings,
+            state=tk.NORMAL if self._devmode is not None else tk.DISABLED,
+        )
+        self._reset_settings_btn.grid(row=0, column=3, padx=(0, 8), pady=8, sticky="w")
 
         # --- Scan area ---
         scan_frame = ttk.LabelFrame(self.root, text="4. Scan barcode")
@@ -195,6 +201,13 @@ class ScanToPrintApp:
 
         self.printer_combo.current(0)
 
+    def _set_devmode(self, devmode):
+        self._devmode = devmode
+        self._reset_settings_btn.config(
+            state=tk.NORMAL if devmode is not None else tk.DISABLED
+        )
+        self._save_settings()
+
     def _save_settings(self):
         w = self.root.winfo_width()
         h = self.root.winfo_height()
@@ -220,8 +233,7 @@ class ScanToPrintApp:
         self._save_settings()
 
     def _on_printer_changed(self, *_):
-        self._devmode = None  # DEVMODE is printer-specific
-        self._save_settings()
+        self._set_devmode(None)  # DEVMODE is printer-specific
 
     def _on_channel_changed(self):
         self._save_settings()
@@ -292,11 +304,14 @@ class ScanToPrintApp:
                     win32con.DM_IN_BUFFER | win32con.DM_OUT_BUFFER | win32con.DM_IN_PROMPT,
                 )
                 if result == win32con.IDOK:
-                    self._devmode = devmode
+                    self._set_devmode(devmode)
             finally:
                 win32print.ClosePrinter(hPrinter)
         except Exception as e:
             messagebox.showerror("Printer settings error", str(e))
+
+    def _reset_printer_settings(self):
+        self._set_devmode(None)
 
     def _browse_folder(self):
         path = filedialog.askdirectory()

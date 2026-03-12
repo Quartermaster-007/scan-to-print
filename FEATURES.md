@@ -94,7 +94,7 @@ Allow the app to search across more than one folder (e.g. one folder per documen
 
 ---
 
-## Print copies / print options ✅ Implemented (copies)
+## Print copies / print options ✅ Implemented
 
 Let the user specify how many copies to print, or choose a different paper tray/orientation.
 
@@ -109,8 +109,13 @@ Let the user specify how many copies to print, or choose a different paper tray/
 - By default the app should just print 1 copy. But if needed the user should be able to adjust a copy number input, which reverts back to 1 after a successfull scan-to-print.
 
 **Implementation notes:**
-- `app.py` — `self._copies` (`IntVar`, default 1); a "Copies:" `ttk.Spinbox` (range 1–99) sits below the barcode entry in the scan frame; resets to 1 after each successful print
-- `printer.py` — `print_file`, `_print_pdf`, `_print_image` each accept a `copies: int = 1` parameter; PDF pages are pre-rendered once and the page sequence is repeated N times in a single GDI job; image `Dib` is created once and drawn N times in the same job; `copies` is clamped to `max(1, int(copies))` in `print_file`
+- A dedicated "3. Print settings" frame sits between printer selection and scan; scan is now "4. Scan barcode"
+- **Copies** — `self._copies` (`IntVar`, default 1); `ttk.Spinbox` (range 1–99); resets to 1 after each successful print
+- **Printer settings** — "Printer settings..." button opens Windows' native `DocumentProperties` dialog for the selected printer (paper, tray, orientation, duplex — whatever the driver exposes); the resulting DEVMODE is stored in `self._devmode` (session-only, not persisted)
+- **Reset to defaults** — clears `self._devmode`; button is disabled when no custom settings are active; re-enabled when `DocumentProperties` is confirmed with OK
+- `self._devmode` is cleared automatically when the printer selection changes (DEVMODE is printer-specific)
+- `printer.py` — `print_file`, `_print_pdf`, `_print_image` each accept `copies: int = 1` and `devmode=None`; `_make_printer_dc` uses `win32gui.CreateDC("WINSPOOL", printer, devmode)` when a DEVMODE is set, otherwise falls back to `win32ui.CreatePrinterDC`
+- PDF pages are pre-rendered once and the page sequence repeated N times in a single GDI job; image `Dib` is created once and drawn N times
 
 ---
 
