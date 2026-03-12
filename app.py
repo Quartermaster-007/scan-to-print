@@ -341,8 +341,12 @@ class ScanToPrintApp:
     def _restore_from_tray(self):
         self._minimized_to_tray = False
         self.root.deiconify()
+        # Temporarily go topmost so Windows allows us to steal focus,
+        # then immediately remove topmost so the window behaves normally.
+        self.root.attributes("-topmost", True)
         self.root.lift()
         self.root.focus_force()
+        self.root.after(100, lambda: self.root.attributes("-topmost", False))
 
     def _on_close(self):
         self._tray.stop()
