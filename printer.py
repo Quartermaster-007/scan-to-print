@@ -25,7 +25,7 @@ def get_default_printer() -> str:
         return ""
 
 
-def print_file(file_path: str, printer_name: str, copies: int = 1) -> None:
+def print_file(file_path: str, printer_name: str, copies: int = 1, devmode=None) -> None:
     """Send a file directly to the named printer without changing the system default."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
@@ -33,16 +33,20 @@ def print_file(file_path: str, printer_name: str, copies: int = 1) -> None:
     copies = max(1, int(copies))
     ext = os.path.splitext(file_path)[1].lower()
     if ext == ".pdf":
-        _print_pdf(file_path, printer_name, copies)
+        _print_pdf(file_path, printer_name, copies, devmode)
     elif ext in (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".tif"):
-        _print_image(file_path, printer_name, copies)
+        _print_image(file_path, printer_name, copies, devmode)
     else:
         raise ValueError(f"Unsupported file type: {ext!r}. Supported: PDF, PNG, JPG, BMP, GIF, TIFF")
 
 
-def _make_printer_dc(printer_name: str):
+def _make_printer_dc(printer_name: str, devmode=None):
     """Return an MFC printer device context for the named printer."""
     import win32ui
+    if devmode is not None:
+        import win32gui
+        hdc = win32gui.CreateDC("WINSPOOL", printer_name, devmode)
+        return win32ui.CreateDCFromHandle(hdc)
     pdc = win32ui.CreateDC()
     pdc.CreatePrinterDC(printer_name)
     return pdc
@@ -54,13 +58,13 @@ def _fit_rect(src_w: int, src_h: int, dst_w: int, dst_h: int) -> tuple[int, int]
     return int(src_w * ratio), int(src_h * ratio)
 
 
-def _print_pdf(file_path: str, printer_name: str, copies: int = 1) -> None:
+def _print_pdf(file_path: str, printer_name: str, copies: int = 1, devmode=None) -> None:
     import win32con
     import pypdfium2 as pdfium
     from PIL import ImageWin
 
     pdf = pdfium.PdfDocument(file_path)
-    pdc = _make_printer_dc(printer_name)
+    pdc = _make_printer_dc(printer_name, devmode)
 
     printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
     printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
@@ -91,12 +95,12 @@ def _print_pdf(file_path: str, printer_name: str, copies: int = 1) -> None:
         pdf.close()
 
 
-def _print_image(file_path: str, printer_name: str, copies: int = 1) -> None:
+def _print_image(file_path: str, printer_name: str, copies: int = 1, devmode=None) -> None:
     import win32con
     from PIL import Image, ImageWin
 
     img = Image.open(file_path).convert("RGB")
-    pdc = _make_printer_dc(printer_name)
+    pdc = _make_printer_dc(printer_name, devmode)
 
     printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
     printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
