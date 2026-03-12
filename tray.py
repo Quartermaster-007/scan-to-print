@@ -14,21 +14,32 @@ import sys
 import threading
 
 import pystray
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import i18n
 
+_GREEN = (34, 197, 94, 255)    # #22c55e — auto-scan active
+_GREY  = (156, 163, 175, 255)  # #9ca3af — auto-scan paused
 
-def _icon_image() -> Image.Image:
-    """Load the application icon as a PIL Image."""
+
+def build_status_icon(paused: bool = False) -> Image.Image:
+    """Return the app icon with a green (active) or grey (paused) status dot."""
     base = getattr(sys, "_MEIPASS", os.path.dirname(__file__))
     path = os.path.join(base, "images", "scan-to-print.png")
     try:
-        return Image.open(path).convert("RGBA")
+        img = Image.open(path).convert("RGBA")
     except Exception:
-        # Fallback: plain coloured square
         img = Image.new("RGBA", (64, 64), (30, 144, 255, 255))
-        return img
+
+    img = img.copy()
+    draw = ImageDraw.Draw(img)
+    size = min(img.width, img.height)
+    r = max(size // 5, 4)
+    margin = max(size // 16, 2)
+    x0 = img.width - r * 2 - margin
+    y0 = img.height - r * 2 - margin
+    draw.ellipse([x0, y0, x0 + r * 2, y0 + r * 2], fill=_GREY if paused else _GREEN)
+    return img
 
 
 class TrayManager:
@@ -62,7 +73,7 @@ class TrayManager:
             return
         self._icon = pystray.Icon(
             "ScanToPrint",
-            _icon_image(),
+            build_status_icon(paused=self._get_scan_paused()),
             "Scan to Print",
             menu=self._build_menu(),
         )
@@ -76,10 +87,15 @@ class TrayManager:
             self._icon = None
 
     def update_menu(self) -> None:
-        """Rebuild the tray menu (call after scanner state changes)."""
+        """Rebuild the tray menu (call after scanner state or language changes)."""
         if self._icon is not None:
             self._icon.menu = self._build_menu()
             self._icon.update_menu()
+
+    def set_scan_state(self, paused: bool) -> None:
+        """Update the tray icon to reflect the current auto-scan state."""
+        if self._icon is not None:
+            self._icon.icon = build_status_icon(paused)
 
     def notify(self, title: str, message: str) -> None:
         """Show a tray balloon notification."""

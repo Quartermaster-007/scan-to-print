@@ -15,7 +15,8 @@ from printer import get_printers, get_default_printer, print_file
 from scanner import BarcodeScanner
 from speedcheck import SpeedcheckWindow
 from language_window import LanguageWindow
-from tray import TrayManager
+from PIL import ImageTk
+from tray import TrayManager, build_status_icon
 
 GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
@@ -75,6 +76,8 @@ class ScanToPrintApp:
             get_scan_paused=lambda: self.scanner.paused,
         )
         self._tray.start()
+        self._window_icon_ref = None  # keeps ImageTk.PhotoImage alive
+        self._update_window_icon()
 
         # Startup update check (2s delay so window is rendered first)
         self.root.after(2000, lambda: updater.check_for_updates(
@@ -325,6 +328,12 @@ class ScanToPrintApp:
         if self.root.state() == "iconic":
             self._minimize_to_tray()
 
+    def _update_window_icon(self):
+        """Set the title-bar / taskbar icon to reflect the current scan state."""
+        img = build_status_icon(self.scanner.paused)
+        self._window_icon_ref = ImageTk.PhotoImage(img)
+        self.root.iconphoto(False, self._window_icon_ref)
+
     def _minimize_to_tray(self):
         self._minimized_to_tray = True
         self.root.withdraw()
@@ -379,6 +388,8 @@ class ScanToPrintApp:
         self._update_scan_indicator()
         self.barcode_entry.bind("<Return>", self._on_manual_entry)
         self._refresh_log()
+        if hasattr(self, "_tray"):
+            self._tray.update_menu()
 
     # ------------------------------------------------------------------
     # UI actions
@@ -417,7 +428,9 @@ class ScanToPrintApp:
         self._update_scan_indicator()
         self._save_settings()
         if hasattr(self, "_tray"):
+            self._tray.set_scan_state(self.scanner.paused)
             self._tray.update_menu()
+            self._update_window_icon()
 
     def _on_manual_entry(self, *_):
         value = self.barcode_entry.get().strip()

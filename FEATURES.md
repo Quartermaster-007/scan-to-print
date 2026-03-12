@@ -173,7 +173,10 @@ Right-click menu should include
 - Tray right-click menu: **Restore** (default / double-click), separator, **Pause/Resume auto-scan** (dynamic label), separator, **Exit**; language items are reserved for the Language prefix feature
 - Error notifications when minimised to tray use `pystray.Icon.notify()` (Windows balloon); when the window is visible, existing `messagebox` dialogs are used
 - `_show_error(title, msg)` helper centralises the logic: tray notify if `_minimized_to_tray`, else `messagebox.showwarning`
-- The tray icon image is loaded from `images/scan-to-print.png` with a PIL fallback (plain coloured square) in case the file is missing
+- `build_status_icon(paused)` in `tray.py` loads `images/scan-to-print.png` (PIL fallback: solid blue square) and overlays a green (`#22c55e`) or grey (`#9ca3af`) dot in the bottom-right corner — matching the in-app `●` indicator colours
+- Both the tray icon and the window title-bar/taskbar icon reflect scan state: `_update_window_icon()` calls `root.iconphoto()` with an `ImageTk.PhotoImage`; icon is updated on startup and on every pause/resume toggle
+- `_apply_language()` calls `_tray.update_menu()` so the tray menu strings are rebuilt immediately when the UI language changes
+- Build: no spec changes needed — `images/scan-to-print.png` was already bundled, `tray.py` is auto-discovered, `PIL.ImageDraw`/`ImageTk` are part of the existing Pillow dependency
 
 ---
 
