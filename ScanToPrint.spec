@@ -18,6 +18,7 @@ a = Analysis(
     datas=[
         ('images/scan-to-print.ico', 'images'),
         ('images/scan-to-print.png', 'images'),
+        ('locales', 'locales'),
     ],
     hiddenimports=[
         'win32print',

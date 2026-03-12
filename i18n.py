@@ -9,8 +9,14 @@ Usage:
 """
 import json
 import os
+import sys
 
-_BASE = os.path.join(os.path.dirname(__file__), "locales")
+# When running as a PyInstaller bundle, data files are extracted to sys._MEIPASS.
+# When running from source, they sit next to this file.
+_BASE = os.path.join(
+    getattr(sys, "_MEIPASS", os.path.dirname(__file__)),
+    "locales",
+)
 
 _lang: dict = {}
 _fallback: dict = {}
