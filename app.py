@@ -215,22 +215,11 @@ class ScanToPrintApp:
         # --- Scan area ---
         scan_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_scan"))
         scan_frame.grid(row=3, column=0, sticky="ew", **pad)
-        scan_frame.columnconfigure(0, weight=1)
+        scan_frame.columnconfigure(1, weight=1)  # col 1 (entry) expands; col 0 (combo) is fixed
 
-        self.barcode_entry = ttk.Entry(scan_frame, font=("Courier", 14))
-        self.barcode_entry.grid(row=0, column=0, padx=5, pady=10, sticky="ew")
-        self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e", cursor="hand2")
-        self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
-        self._scan_indicator.bind("<Button-1>", lambda _e: self._toggle_scanner())
-        self._scan_label = tk.Label(scan_frame, text=i18n.t("lbl_autoscan"), cursor="hand2")
-        self._scan_label.grid(row=0, column=2, padx=(0, 8))
-        self._scan_label.bind("<Button-1>", lambda _e: self._toggle_scanner())
-
-        # Prefix language row (shown only when prefix feature is enabled)
-        self._prefix_row_label = ttk.Label(scan_frame, text=i18n.t("lbl_prefix_lang"))
+        # Prefix combo sits in col 0 before the entry; hidden when feature is off
         from language_window import AVAILABLE_PREFIX_LANGUAGES
         prefix_options = [f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES]
-        # Set display value for current code
         current_display = next(
             (f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
             prefix_options[0],
@@ -238,12 +227,20 @@ class ScanToPrintApp:
         self._prefix_lang_var.set(current_display)
         self._prefix_combo = ttk.Combobox(
             scan_frame, textvariable=self._prefix_lang_var,
-            values=prefix_options, state="readonly", width=18,
+            values=prefix_options, state="readonly", width=16,
         )
         self._prefix_combo.bind("<<ComboboxSelected>>", self._on_prefix_lang_changed)
         if self._prefix_enabled:
-            self._prefix_row_label.grid(row=1, column=0, padx=(5, 2), pady=(0, 8), sticky="w")
-            self._prefix_combo.grid(row=1, column=1, columnspan=2, padx=(0, 8), pady=(0, 8), sticky="w")
+            self._prefix_combo.grid(row=0, column=0, padx=(5, 2), pady=10)
+
+        self.barcode_entry = ttk.Entry(scan_frame, font=("Courier", 14))
+        self.barcode_entry.grid(row=0, column=1, padx=(0, 5), pady=10, sticky="ew")
+        self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e", cursor="hand2")
+        self._scan_indicator.grid(row=0, column=2, padx=(6, 2))
+        self._scan_indicator.bind("<Button-1>", lambda _e: self._toggle_scanner())
+        self._scan_label = tk.Label(scan_frame, text=i18n.t("lbl_autoscan"), cursor="hand2")
+        self._scan_label.grid(row=0, column=3, padx=(0, 8))
+        self._scan_label.bind("<Button-1>", lambda _e: self._toggle_scanner())
 
         # --- Log ---
         log_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_log"))
@@ -488,7 +485,7 @@ class ScanToPrintApp:
                 self._tray.update_menu()
 
     def _apply_prefix_ui(self):
-        """Show or hide the prefix row in the scan frame after a settings change."""
+        """Show or hide the prefix combo in the scan frame after a settings change."""
         if self._prefix_combo is None:
             return
         # Update display var to match current code
@@ -499,10 +496,8 @@ class ScanToPrintApp:
         )
         self._prefix_lang_var.set(current_display)
         if self._prefix_enabled:
-            self._prefix_row_label.grid(row=1, column=0, padx=(5, 2), pady=(0, 8), sticky="w")
-            self._prefix_combo.grid(row=1, column=1, columnspan=2, padx=(0, 8), pady=(0, 8), sticky="w")
+            self._prefix_combo.grid(row=0, column=0, padx=(5, 2), pady=10)
         else:
-            self._prefix_row_label.grid_remove()
             self._prefix_combo.grid_remove()
         self._rebuild_prefix_recent_menu()
         if hasattr(self, "_tray"):
