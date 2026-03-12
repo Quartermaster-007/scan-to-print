@@ -16,6 +16,7 @@ from speedcheck import SpeedcheckWindow
 GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
 
+
 class ScanToPrintApp:
     def __init__(self):
         self.root = tk.Tk()
@@ -29,6 +30,7 @@ class ScanToPrintApp:
         self.status_text = tk.StringVar(value="Ready. Scan a barcode to print.")
         self._update_channel = tk.StringVar(value=self._settings["updates"]["channel"])
         self._copies = tk.IntVar(value=1)
+        self._devmode = None
 
         self._build_menu()
         self._build_ui()
@@ -137,9 +139,27 @@ class ScanToPrintApp:
         )
         self.printer_combo.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
+        # --- Print settings ---
+        print_frame = ttk.LabelFrame(self.root, text="3. Print settings")
+        print_frame.grid(row=2, column=0, sticky="ew", **pad)
+
+        tk.Label(print_frame, text="Copies:").grid(row=0, column=0, padx=(8, 4), pady=8, sticky="w")
+        ttk.Spinbox(
+            print_frame, from_=1, to=99, textvariable=self._copies,
+            width=4, justify="center",
+        ).grid(row=0, column=1, pady=8, sticky="w")
+        ttk.Button(
+            print_frame, text="Printer settings...", command=self._open_printer_settings,
+        ).grid(row=0, column=2, padx=(16, 8), pady=8, sticky="w")
+        self._reset_settings_btn = ttk.Button(
+            print_frame, text="Reset to defaults", command=self._reset_printer_settings,
+            state=tk.NORMAL if self._devmode is not None else tk.DISABLED,
+        )
+        self._reset_settings_btn.grid(row=0, column=3, padx=(0, 8), pady=8, sticky="w")
+
         # --- Scan area ---
-        scan_frame = ttk.LabelFrame(self.root, text="3. Scan barcode")
-        scan_frame.grid(row=2, column=0, sticky="ew", **pad)
+        scan_frame = ttk.LabelFrame(self.root, text="4. Scan barcode")
+        scan_frame.grid(row=3, column=0, sticky="ew", **pad)
         scan_frame.columnconfigure(0, weight=1)
 
         self.barcode_entry = ttk.Entry(scan_frame, font=("Courier", 14))
@@ -148,17 +168,9 @@ class ScanToPrintApp:
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
         tk.Label(scan_frame, text="Auto-scan").grid(row=0, column=2, padx=(0, 8))
 
-        copies_frame = tk.Frame(scan_frame)
-        copies_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=(0, 8), sticky="w")
-        tk.Label(copies_frame, text="Copies:").pack(side="left")
-        ttk.Spinbox(
-            copies_frame, from_=1, to=99, textvariable=self._copies,
-            width=4, justify="center",
-        ).pack(side="left", padx=(4, 0))
-
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
-            row=3, column=0, sticky="ew", padx=10, pady=(0, 10)
+            row=4, column=0, sticky="ew", padx=10, pady=(0, 10)
         )
 
     # ------------------------------------------------------------------
@@ -189,6 +201,13 @@ class ScanToPrintApp:
 
         self.printer_combo.current(0)
 
+    def _set_devmode(self, devmode):
+        self._devmode = devmode
+        self._reset_settings_btn.config(
+            state=tk.NORMAL if devmode is not None else tk.DISABLED
+        )
+        self._save_settings()
+
     def _save_settings(self):
         w = self.root.winfo_width()
         h = self.root.winfo_height()
@@ -214,7 +233,7 @@ class ScanToPrintApp:
         self._save_settings()
 
     def _on_printer_changed(self, *_):
-        self._save_settings()
+        self._set_devmode(None)  # DEVMODE is printer-specific
 
     def _on_channel_changed(self):
         self._save_settings()
@@ -267,6 +286,32 @@ class ScanToPrintApp:
         if value:
             self.barcode_entry.delete(0, "end")
             self._on_barcode(value)
+
+    def _open_printer_settings(self):
+        printer = self.selected_printer.get()
+        if not printer:
+            messagebox.showwarning("No printer", "Please select a printer first.")
+            return
+        try:
+            import win32print
+            import win32con
+            hPrinter = win32print.OpenPrinter(printer)
+            try:
+                devmode = win32print.GetPrinter(hPrinter, 2)["pDevMode"]
+                result = win32print.DocumentProperties(
+                    self.root.winfo_id(), hPrinter, printer,
+                    devmode, devmode,
+                    win32con.DM_IN_BUFFER | win32con.DM_OUT_BUFFER | win32con.DM_IN_PROMPT,
+                )
+                if result == win32con.IDOK:
+                    self._set_devmode(devmode)
+            finally:
+                win32print.ClosePrinter(hPrinter)
+        except Exception as e:
+            messagebox.showerror("Printer settings error", str(e))
+
+    def _reset_printer_settings(self):
+        self._set_devmode(None)
 
     def _browse_folder(self):
         path = filedialog.askdirectory()
@@ -332,7 +377,7 @@ class ScanToPrintApp:
         copies = self._copies.get()
         self.status_text.set(f"Printing: {os.path.basename(file_to_print)} on {printer}...")
         try:
-            print_file(file_to_print, printer, copies)
+            print_file(file_to_print, printer, copies, self._devmode)
             self._copies.set(1)
             self.status_text.set(f"Sent to printer: {os.path.basename(file_to_print)}")
         except Exception as e:

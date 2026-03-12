@@ -69,14 +69,14 @@ When implementing a feature:
 - [x] Printer selection working
 - [x] Barcode input working (focus-based, superseded)
 - [x] Print job working (direct GDI via pypdfium2/Pillow — no dialog, no default-printer side effect)
-- [x] Persistent settings (#3) — `settings.py`, File menu, window size, last folder/printer
-- [x] Auto scan-to-print / global keyboard hook (#10) — `pynput` listener, pause toggle, speed check window
-- [x] GitHub update check + in-app self-update (#13) — `updater.py`, `version.py`, `.github/workflows/release.yml`
-- [ ] UI language selection (#11)
-- [ ] Print history / log (#1)
-- [ ] Failure sound feedback (#2)
-- [x] Direct silent printing — pypdfium2 + Pillow, no dialog (#9)
-- [x] Print copies input (#5)
-- [ ] System tray (#7)
-- [ ] Language prefix (#12)
+- [x] Persistent settings — `settings.py`, File menu, window size, last folder/printer
+- [x] Auto scan-to-print / global keyboard hook — `pynput` listener, pause toggle, speed check window
+- [x] GitHub update check + in-app self-update — `updater.py`, `version.py`, `.github/workflows/release.yml`
+- [ ] UI language selection
+- [ ] Print history / log
+- [ ] Failure sound feedback
+- [x] Direct silent printing — pypdfium2 + Pillow, no dialog
+- [x] Print copies input + printer options dialog
+- [ ] System tray
+- [ ] Language prefix
 - [x] Packaged as .exe — CI builds via PyInstaller on `windows-latest`, published as GitHub Release

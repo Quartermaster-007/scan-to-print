@@ -10,13 +10,13 @@ The core app is fully working:
 - Folder selection, printer selection, barcode input (USB scanner or keyboard)
 - Finds matching file by barcode name, disambiguates if multiple extensions exist
 - Prints via Windows ShellExecute
-- Persistent settings in `%APPDATA%\ScanToPrint\settings.json` (#3 ✅)
-- Global keyboard listener (pynput) with timing-based barcode detection (#10 ✅)
-- Pause/resume toggle + scanner speed check with auto-calibration (#10 ✅)
+- Persistent settings in `%APPDATA%\ScanToPrint\settings.json` ✅
+- Global keyboard listener (pynput) with timing-based barcode detection ✅
+- Pause/resume toggle + scanner speed check with auto-calibration ✅
 
 ---
 
-## Feature 1 — Print history / log
+## Print history / log
 
 Show a record of every scan attempt (barcode scanned, file matched, printer used, result, timestamp).
 
@@ -36,7 +36,7 @@ Show a record of every scan attempt (barcode scanned, file matched, printer used
 
 ---
 
-## Feature 2 — Sound / visual feedback on scan
+## Sound / visual feedback on scan
 
 Play a sound or flash the window when a scan succeeds or fails — useful in noisy warehouse environments where the operator can't read the screen.
 
@@ -53,7 +53,7 @@ Play a sound or flash the window when a scan succeeds or fails — useful in noi
 
 ---
 
-## Feature 3 — Persistent settings ✅ Implemented
+## Persistent settings ✅ Implemented
 
 Remember the last-used folder and printer between sessions so the user doesn't have to reconfigure on every launch.
 
@@ -80,7 +80,7 @@ Settings to store, based on the core functionallity and not including any new fe
 
 ---
 
-## Feature 4 — Multiple folder support
+## Multiple folder support
 
 Allow the app to search across more than one folder (e.g. one folder per document type or department).
 
@@ -94,7 +94,7 @@ Allow the app to search across more than one folder (e.g. one folder per documen
 
 ---
 
-## Feature 5 — Print copies / print options
+## Print copies / print options ✅ Implemented
 
 Let the user specify how many copies to print, or choose a different paper tray/orientation.
 
@@ -109,12 +109,17 @@ Let the user specify how many copies to print, or choose a different paper tray/
 - By default the app should just print 1 copy. But if needed the user should be able to adjust a copy number input, which reverts back to 1 after a successfull scan-to-print.
 
 **Implementation notes:**
-- `app.py` — `self._copies` (`IntVar`, default 1); a "Copies:" `ttk.Spinbox` (range 1–99) sits below the barcode entry in the scan frame; resets to 1 after each successful print
-- `printer.py` — `print_file`, `_print_pdf`, `_print_image` each accept a `copies: int = 1` parameter; PDF pages are pre-rendered once and the page sequence is repeated N times in a single GDI job; image `Dib` is created once and drawn N times in the same job; `copies` is clamped to `max(1, int(copies))` in `print_file`
+- A dedicated "3. Print settings" frame sits between printer selection and scan; scan is now "4. Scan barcode"
+- **Copies** — `self._copies` (`IntVar`, default 1); `ttk.Spinbox` (range 1–99); resets to 1 after each successful print
+- **Printer settings** — "Printer settings..." button opens Windows' native `DocumentProperties` dialog for the selected printer (paper, tray, orientation, duplex — whatever the driver exposes); the resulting DEVMODE is stored in `self._devmode` (session-only, not persisted)
+- **Reset to defaults** — clears `self._devmode`; button is disabled when no custom settings are active; re-enabled when `DocumentProperties` is confirmed with OK
+- `self._devmode` is cleared automatically when the printer selection changes (DEVMODE is printer-specific)
+- `printer.py` — `print_file`, `_print_pdf`, `_print_image` each accept `copies: int = 1` and `devmode=None`; `_make_printer_dc` uses `win32gui.CreateDC("WINSPOOL", printer, devmode)` when a DEVMODE is set, otherwise falls back to `win32ui.CreatePrinterDC`
+- PDF pages are pre-rendered once and the page sequence repeated N times in a single GDI job; image `Dib` is created once and drawn N times
 
 ---
 
-## Feature 6 — Barcode prefix / suffix filtering
+## Barcode prefix / suffix filtering
 
 Some scanners add a prefix or suffix to every scan (e.g. `]C1` for Code 128 AIM identifiers). Strip or remap these automatically.
 
@@ -128,7 +133,7 @@ Some scanners add a prefix or suffix to every scan (e.g. `]C1` for Code 128 AIM 
 
 ---
 
-## Feature 7 — System tray / minimise to tray
+## System tray / minimise to tray
 
 Allow the app to run minimised in the Windows system tray so it stays available without taking up taskbar space.
 
@@ -145,11 +150,11 @@ Right-click menu should include
 - Restore app, opening the normal app UI.
 - Exit app.
 - Stop/resume automatic scan-to-print functionallity.
-- Select any of the last 5 used languages. 
+- Select any of the last 5 used languages.
 
 ---
 
-## Feature 8 — Auto-start on Windows login
+## Auto-start on Windows login
 
 Register the app to launch automatically when Windows starts.
 
@@ -163,7 +168,7 @@ Register the app to launch automatically when Windows starts.
 
 ---
 
-## Feature 9 — Direct silent printing (no dialog, no default-printer side effect) ✅ Implemented
+## Direct silent printing ✅ Implemented
 
 Currently, `SetDefaultPrinter` is called before each print and `ShellExecute` is used to trigger printing, which opens the application's print dialog and temporarily changes the system default printer. The fix is to print directly to a named printer without any UI or side effects.
 
@@ -200,14 +205,14 @@ The logic for selecting the printer should be:
 
 ---
 
-## Feature 10 — Auto scan-to-print ✅ Implemented
+## Auto scan-to-print ✅ Implemented
 
 The app should monitor input from the barcode scanner and attempt to print any document that matches its input. No need to first highlight the input box and therefore also work when the app is minimized to the system tray.
 
 **Your answers:**
 - Use timing-based detection to distinguish barcode scanner input from regular keyboard typing.
 
-**Implementation note:** Use `pynput` to install a global keyboard listener (works even when the app has no focus / is in the tray). Barcode scanners send all characters within ~50ms followed by Enter; human typing is much slower. The listener accumulates keystrokes and measures inter-key delay — if a sequence ends with Enter and all characters arrived within the threshold, it is treated as a barcode scan. Regular keyboard input is ignored. The pause/resume toggle in the tray menu (Feature 7) will enable/disable this listener.
+**Implementation note:** Use `pynput` to install a global keyboard listener (works even when the app has no focus / is in the tray). Barcode scanners send all characters within ~50ms followed by Enter; human typing is much slower. The listener accumulates keystrokes and measures inter-key delay — if a sequence ends with Enter and all characters arrived within the threshold, it is treated as a barcode scan. Regular keyboard input is ignored. The pause/resume toggle in the tray menu (System tray feature) will enable/disable this listener.
 
 **Implementation notes:**
 - `scanner.py` — `BarcodeScanner` class wraps a `pynput.keyboard.Listener` in a daemon thread; configurable `threshold_ms` (default 100ms); `MIN_LENGTH = 3` to ignore stray Enter presses; fires callback via `root.after(0, ...)` for thread safety
@@ -219,7 +224,7 @@ The app should monitor input from the barcode scanner and attempt to print any d
 
 ---
 
-## Feature 11 — Language selection for UI
+## Language selection for UI
 
 User can select the language used in the app for all the strings and logs. Include English and Dutch as options at first. In the menubar, under 'File', then 'Preferences', include a button for language selection that opens a new UI screen for selection of available languages. Save the used language to `settings.json` and use the store value whenever available.
 
@@ -227,9 +232,9 @@ User can select the language used in the app for all the strings and logs. Inclu
 
 ---
 
-## Feature 12 — Language selection for prefix
+## Language prefix
 
-User has to enable the feature that prefixes a iso 3166-1 alpha-2 country code to the scanned barcode. That way the folder can contain multiple language versions, and the app prints the selected language version. In the menubar, under 'Prefix', include a button for language selection that opens the same UI window of feature #11. The left side will show UI languages and the right side should include a toggle for the feature and a list of languages to select. If the feature is turned on, then include a new dropdown menu in the scan section to quickly select a different language. The last five selected languages are saved to `settings.json` so they can be referenced in the right-click menu of the system tray and in the menubar under 'Prefix'.
+User has to enable the feature that prefixes a iso 3166-1 alpha-2 country code to the scanned barcode. That way the folder can contain multiple language versions, and the app prints the selected language version. In the menubar, under 'Prefix', include a button for language selection that opens the same UI window as Language selection for UI. The left side will show UI languages and the right side should include a toggle for the feature and a list of languages to select. If the feature is turned on, then include a new dropdown menu in the scan section to quickly select a different language. The last five selected languages are saved to `settings.json` so they can be referenced in the right-click menu of the system tray and in the menubar under 'Prefix'.
 
 The list of languages shown should follow the format:
 * English (EN)
@@ -242,7 +247,7 @@ The list of languages shown should follow the format:
 
 ---
 
-## Feature 13 — App updates via Github ✅ Implemented
+## App updates via Github ✅ Implemented
 
 Build the Windows executable on Github and host releases on there. The app should check for new versions of the app and download that new version. Versioning should be done in the format yyyy.mm.dd.
 
@@ -270,13 +275,13 @@ Build the Windows executable on Github and host releases on there. The app shoul
 
 Once you've filled in the features you want, list them here in the order you'd like them built:
 
-1. #3 — Persistent settings
-2. #10 — Auto scan-to-print
-3. #13 — App updates via Github
-4. #9 — Direct silent printing (no dialog, no default-printer side effect)
-5. #5 — Print copies / print options
-6. #11 — Language selection for UI
-7. #1 — Print history / log
-8. #2 — Sound / visual feedback on scan
-9. #7 — System tray / minimise to tray
-10. #12 — Language selection for prefix
+1. Persistent settings
+2. Auto scan-to-print
+3. App updates via Github
+4. Direct silent printing
+5. Print copies / print options
+6. Language selection for UI
+7. Print history / log
+8. Sound / visual feedback on scan
+9. System tray / minimise to tray
+10. Language prefix
