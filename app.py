@@ -510,24 +510,7 @@ class ScanToPrintApp:
             self._tray.update_menu()
 
     def _rebuild_prefix_recent_menu(self):
-        """Rebuild the recent-languages entries in the Prefix menu."""
-        if not hasattr(self, "_prefix_menu"):
-            return
-        # Remove everything after the first item (Prefix settings...)
-        end = self._prefix_menu.index("end")
-        if end is not None and end >= 1:
-            self._prefix_menu.delete(1, "end")
-        if self._prefix_recent:
-            self._prefix_menu.add_separator()
-            from language_window import AVAILABLE_PREFIX_LANGUAGES
-            lang_map = {code: i18n.t(key) for key, code in AVAILABLE_PREFIX_LANGUAGES}
-            for code in self._prefix_recent:
-                label = lang_map.get(code, code)
-                display = f"{label} ({code})"
-                self._prefix_menu.add_command(
-                    label=display,
-                    command=lambda c=code: self._set_prefix_lang(c),
-                )
+        pass  # recent list no longer shown in menubar
 
     def _set_prefix_lang(self, code: str):
         """Quick-select a prefix language from the menu or tray."""
