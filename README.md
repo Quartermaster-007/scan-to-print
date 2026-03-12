@@ -15,9 +15,9 @@ pip install -r requirements.txt
 `requirements.txt` installs:
 - `pywin32` — Windows printer API
 - `pynput` — global keyboard listener for barcode input
-- `pypdfium2` — PDF rendering and printing (planned — Feature #9)
-- `Pillow` — image printing (planned — Feature #9)
-- `pystray` — system tray icon (planned — Feature #7)
+- `pypdfium2` — PDF rendering and direct printing
+- `Pillow` — image rendering and direct printing
+- `pystray` — system tray icon (planned)
 - `requests` — GitHub update check and in-app self-update
 - `pyinstaller` — for building a standalone `.exe`
 
@@ -31,13 +31,14 @@ python main.py
 
 1. **Select folder** — choose the folder containing your files. Files must be named after their barcode value (e.g. `12345678.pdf`, `ABC-999.pdf`).
 2. **Select printer** — pick from the list of installed Windows printers. The last used printer is pre-selected on startup; falls back to the Windows default printer.
-3. **Scan** — point your USB barcode scanner at a barcode. The global listener detects scanner input automatically — no need to click the app first.
+3. **Print settings** — set the number of copies (resets to 1 after each print). Use **Printer settings…** to configure paper, tray, orientation, and other driver options via the Windows native dialog.
+4. **Scan** — point your USB barcode scanner at a barcode. The global listener detects scanner input automatically — no need to click the app first.
 
 You can also type a barcode manually in the entry box and press Enter.
 
 If multiple files share the same barcode name (different extensions), a dialog lets you choose which to print.
 
-Settings (folder, printer, window size, auto-scan state, scanner threshold) are saved automatically to `%APPDATA%\ScanToPrint\settings.json`.
+Settings (folder, printer, language, window size, auto-scan state, scanner threshold) are saved automatically to `%APPDATA%\ScanToPrint\settings.json`.
 
 ## Scanner menu
 
@@ -45,6 +46,10 @@ Settings (folder, printer, window size, auto-scan state, scanner threshold) are 
 |------|-------------|
 | Pause / Resume auto-scan | Temporarily disables the global listener |
 | Speed check… | Measures your scanner's inter-key timing and sets the detection threshold automatically |
+
+## Language
+
+The UI language is configurable under **File → Preferences → Language…**. English and Dutch are included. The selected language is saved to `settings.json` and restored on next launch.
 
 ## Updates
 
@@ -64,11 +69,14 @@ The update channel (**Stable releases** or **Pre-releases**) is configurable und
 scan-to-print/
   main.py            # Entry point — run this to launch the app
   app.py             # Main Tkinter window and UI logic
-  printer.py         # Printer enumeration and print job (pywin32)
+  printer.py         # Printer enumeration and print job (pywin32 + pypdfium2 + Pillow)
   scanner.py         # Global pynput keyboard listener (timing-based detection)
   settings.py        # Persistent settings in %APPDATA%/ScanToPrint/settings.json
   speedcheck.py      # Scanner speed check window
   updater.py         # GitHub release check and in-app self-update
+  i18n.py            # Internationalisation — loads strings from locales/<lang>.json
+  language_window.py # Language selection dialog
+  locales/           # UI string translations (en.json, nl.json)
   version.py         # __version__ placeholder, overwritten by CI at build time
   build.py           # Build script — outputs to dist/ with version+branch in the exe name
   test_scan.py       # Simulates USB scanner input for testing without hardware
