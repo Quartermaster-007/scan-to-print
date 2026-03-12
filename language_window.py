@@ -105,13 +105,14 @@ class LanguageWindow:
         self._prefix_radio_frame = ttk.Frame(prefix_frame)
         self._prefix_radio_frame.pack(anchor="w", padx=12, pady=(0, 8))
 
-        for label, code in AVAILABLE_PREFIX_LANGUAGES:
+        _COLS = 3
+        for i, (label, code) in enumerate(AVAILABLE_PREFIX_LANGUAGES):
             ttk.Radiobutton(
                 self._prefix_radio_frame,
                 text=f"{label} ({code})",
                 variable=self._selected_prefix,
                 value=code,
-            ).pack(anchor="w", pady=2)
+            ).grid(row=i // _COLS, column=i % _COLS, sticky="w", padx=(0, 12), pady=2)
 
         self._on_toggle_prefix()  # set initial enabled/disabled state
 
