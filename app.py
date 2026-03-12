@@ -201,9 +201,12 @@ class ScanToPrintApp:
 
         self.barcode_entry = ttk.Entry(scan_frame, font=("Courier", 14))
         self.barcode_entry.grid(row=0, column=0, padx=5, pady=10, sticky="ew")
-        self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e")
+        self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e", cursor="hand2")
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
-        ttk.Label(scan_frame, text=i18n.t("lbl_autoscan")).grid(row=0, column=2, padx=(0, 8))
+        self._scan_indicator.bind("<Button-1>", lambda _e: self._toggle_scanner())
+        self._scan_label = tk.Label(scan_frame, text=i18n.t("lbl_autoscan"), cursor="hand2")
+        self._scan_label.grid(row=0, column=2, padx=(0, 8))
+        self._scan_label.bind("<Button-1>", lambda _e: self._toggle_scanner())
 
         # --- Log ---
         log_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_log"))
