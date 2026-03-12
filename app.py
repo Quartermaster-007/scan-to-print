@@ -83,6 +83,7 @@ class ScanToPrintApp:
             get_scan_paused=lambda: self.scanner.paused,
             get_prefix_enabled=lambda: self._prefix_enabled,
             get_recent_prefix=lambda: list(self._prefix_recent),
+            get_prefix_lang=lambda: self._prefix_lang,
             on_set_prefix_lang=self._set_prefix_lang,
         )
         self._tray.start()

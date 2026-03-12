@@ -65,7 +65,7 @@
   "prefix_window_enable": "Enable language prefix",
   "prefix_window_lang_label": "Select prefix language:",
   "menu_prefix": "Prefix",
-  "menu_prefix_settings": "Prefix settings...",
+  "menu_prefix_settings": "Language prefix...",
   "lbl_prefix_lang": "Prefix:",
 
   "lang_BG": "Bulgarian",

@@ -55,6 +55,7 @@ class TrayManager:
         get_scan_paused,
         get_prefix_enabled=None,
         get_recent_prefix=None,
+        get_prefix_lang=None,
         on_set_prefix_lang=None,
     ):
         self._root = root
@@ -64,6 +65,7 @@ class TrayManager:
         self._get_scan_paused = get_scan_paused
         self._get_prefix_enabled = get_prefix_enabled or (lambda: False)
         self._get_recent_prefix = get_recent_prefix or (lambda: [])
+        self._get_prefix_lang = get_prefix_lang or (lambda: None)
         self._on_set_prefix_lang = on_set_prefix_lang or (lambda _: None)
 
         self._icon = None  # pystray.Icon
@@ -140,7 +142,12 @@ class TrayManager:
                     label = lang_map.get(code, code)
                     display = f"{label} ({code})"
                     cb = self._make_prefix_cb(code)
-                    prefix_items.append(pystray.MenuItem(display, cb))
+                    c = code  # capture for closure
+                    prefix_items.append(pystray.MenuItem(
+                        display, cb,
+                        checked=lambda _item, c=c: self._get_prefix_lang() == c,
+                        radio=True,
+                    ))
                 items.append(pystray.Menu.SEPARATOR)
                 items.append(
                     pystray.MenuItem(
