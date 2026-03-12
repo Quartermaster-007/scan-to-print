@@ -18,10 +18,30 @@ AVAILABLE_LANGUAGES = [
 ]
 
 AVAILABLE_PREFIX_LANGUAGES = [
-    ("English", "EN"),
-    ("German", "DE"),
-    ("French", "FR"),
+    ("Bulgarian", "BG"),
+    ("Catalan", "CA"),
+    ("Croatian", "HR"),
+    ("Czech", "CS"),
+    ("Danish", "DA"),
     ("Dutch", "NL"),
+    ("English", "EN"),
+    ("Finnish", "FI"),
+    ("French", "FR"),
+    ("German", "DE"),
+    ("Greek", "EL"),
+    ("Hungarian", "HU"),
+    ("Italian", "IT"),
+    ("Norwegian", "NO"),
+    ("Polish", "PL"),
+    ("Portuguese", "PT"),
+    ("Romanian", "RO"),
+    ("Russian", "RU"),
+    ("Slovak", "SK"),
+    ("Slovenian", "SL"),
+    ("Spanish", "ES"),
+    ("Swedish", "SV"),
+    ("Turkish", "TR"),
+    ("Ukrainian", "UK"),
 ]
 
 
