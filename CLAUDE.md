@@ -74,7 +74,7 @@ When implementing a feature:
 - [x] GitHub update check + in-app self-update — `updater.py`, `version.py`, `.github/workflows/release.yml`
 - [x] UI language selection
 - [x] Print history / log
-- [ ] Failure sound feedback
+- [x] Failure sound feedback
 - [x] Direct silent printing — pypdfium2 + Pillow, no dialog
 - [x] Print copies input + printer options dialog
 - [ ] System tray

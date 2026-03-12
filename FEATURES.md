@@ -60,6 +60,11 @@ Play a sound or flash the window when a scan succeeds or fails — useful in noi
 - Failure sound would be useful. Use 'C:\Windows\Media\Windows Foreground.wav' that is always present on a Windows 10 and 11 machine.
 - No visual feedback needed.
 
+**Implementation notes:**
+- Only the "no file found" case needed a sound — other failures (no folder, no printer, print error) already produce audio via their `messagebox` dialogs.
+- `winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)` plays the system Exclamation sound (same as a warning dialog) without any popup or user interaction — the scanner can keep working immediately.
+- `winsound` is stdlib; no new dependency added.
+
 ---
 
 ## Persistent settings ✅ Implemented
