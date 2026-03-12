@@ -44,6 +44,27 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Stamp version info
+        shell: python
+        run: |
+          import re, os
+          v = os.environ["VERSION"]
+          parts = [int(x) for x in v.split(".")]
+          parts += [0] * (4 - len(parts))
+          t = tuple(parts[:4])
+          with open("file_version_info.py", encoding="utf-8") as f:
+              txt = f.read()
+          txt = re.sub(r"filevers=\(.*?\)", f"filevers={t}", txt)
+          txt = re.sub(r"prodvers=\(.*?\)", f"prodvers={t}", txt)
+          for k in ("FileVersion", "ProductVersion"):
+              txt = re.sub(
+                  rf"StringStruct\(u'{k}',\s*u'[^']*'\)",
+                  f"StringStruct(u'{k}', u'{v}')",
+                  txt,
+              )
+          with open("file_version_info.py", "w", encoding="utf-8") as f:
+              f.write(txt)
+
       - name: Install dependencies
         run: pip install -r requirements.txt pyinstaller
 

@@ -15,6 +15,8 @@ from printer import get_printers, get_default_printer, print_file
 from scanner import BarcodeScanner
 from speedcheck import SpeedcheckWindow
 from language_window import LanguageWindow
+from PIL import ImageTk
+from tray import TrayManager, build_status_icon
 
 GITHUB_URL = "https://github.com/Quartermaster-007/scan-to-print"
 
@@ -40,6 +42,7 @@ class ScanToPrintApp:
         self._devmode = None
         self._log_entries = []  # preserved across language rebuilds
         self._log_text = None   # set by _build_ui
+        self._minimized_to_tray = False
 
         self._build_menu()
         self._build_ui()
@@ -56,12 +59,25 @@ class ScanToPrintApp:
         # Manual entry: bind Enter directly on the barcode entry widget
         self.barcode_entry.bind("<Return>", self._on_manual_entry)
 
-        # Save settings on close
+        # Save settings on close; minimize goes to tray
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.root.bind("<Unmap>", self._on_unmap)
 
         # Persist folder/printer whenever they change
         self.folder_path.trace_add("write", self._on_folder_changed)
         self.selected_printer.trace_add("write", self._on_printer_changed)
+
+        # System tray
+        self._tray = TrayManager(
+            self.root,
+            on_restore=self._restore_from_tray,
+            on_exit=self._on_close,
+            on_toggle_scan=self._toggle_scanner,
+            get_scan_paused=lambda: self.scanner.paused,
+        )
+        self._tray.start()
+        self._window_icon_ref = None  # keeps ImageTk.PhotoImage alive
+        self._update_window_icon()
 
         # Startup update check (2s delay so window is rendered first)
         self.root.after(2000, lambda: updater.check_for_updates(
@@ -304,10 +320,46 @@ class ScanToPrintApp:
     def _on_channel_changed(self):
         self._save_settings()
 
+    def _on_unmap(self, event):
+        """Intercept window minimise — hide to tray instead of taskbar."""
+        # Only act on the root window itself, not child widgets
+        if event.widget is not self.root:
+            return
+        if self.root.state() == "iconic":
+            self._minimize_to_tray()
+
+    def _update_window_icon(self):
+        """Set the title-bar / taskbar icon to reflect the current scan state."""
+        img = build_status_icon(self.scanner.paused)
+        self._window_icon_ref = ImageTk.PhotoImage(img)
+        self.root.iconphoto(False, self._window_icon_ref)
+
+    def _minimize_to_tray(self):
+        self._minimized_to_tray = True
+        self.root.withdraw()
+
+    def _restore_from_tray(self):
+        self._minimized_to_tray = False
+        self.root.deiconify()
+        # Temporarily go topmost so Windows allows us to steal focus,
+        # then immediately remove topmost so the window behaves normally.
+        self.root.attributes("-topmost", True)
+        self.root.lift()
+        self.root.focus_force()
+        self.root.after(100, lambda: self.root.attributes("-topmost", False))
+
     def _on_close(self):
+        self._tray.stop()
         self.scanner.stop()
         self._save_settings()
         self.root.destroy()
+
+    def _show_error(self, title: str, message: str):
+        """Show an error: tray notification when minimised, messagebox otherwise."""
+        if self._minimized_to_tray:
+            self._tray.notify(title, message)
+        else:
+            messagebox.showwarning(title, message)
 
     def _open_settings_file(self):
         path = settings.get_path()
@@ -340,6 +392,8 @@ class ScanToPrintApp:
         self._update_scan_indicator()
         self.barcode_entry.bind("<Return>", self._on_manual_entry)
         self._refresh_log()
+        if hasattr(self, "_tray"):
+            self._tray.update_menu()
 
     # ------------------------------------------------------------------
     # UI actions
@@ -377,6 +431,10 @@ class ScanToPrintApp:
         self.scanner.toggle()
         self._update_scan_indicator()
         self._save_settings()
+        if hasattr(self, "_tray"):
+            self._tray.set_scan_state(self.scanner.paused)
+            self._tray.update_menu()
+            self._update_window_icon()
 
     def _on_manual_entry(self, *_):
         value = self.barcode_entry.get().strip()
@@ -455,15 +513,11 @@ class ScanToPrintApp:
 
         if not folder:
             self._log(i18n.t("log_no_folder", barcode=barcode), error=True)
-            messagebox.showwarning(
-                i18n.t("dlg_no_folder_title"), i18n.t("dlg_no_folder_msg")
-            )
+            self._show_error(i18n.t("dlg_no_folder_title"), i18n.t("dlg_no_folder_msg"))
             return
         if not printer:
             self._log(i18n.t("log_no_printer", barcode=barcode), error=True)
-            messagebox.showwarning(
-                i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg")
-            )
+            self._show_error(i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg"))
             return
 
         matches = [f for f in os.listdir(folder) if os.path.splitext(f)[0] == barcode]
@@ -472,6 +526,11 @@ class ScanToPrintApp:
             self.status_text.set(i18n.t("status_no_file", barcode=barcode))
             self._log(i18n.t("log_no_file", barcode=barcode), error=True)
             winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+            if self._minimized_to_tray:
+                self._tray.notify(
+                    i18n.t("tray_notify_no_file_title"),
+                    i18n.t("tray_notify_no_file_msg", barcode=barcode),
+                )
             return
 
         if len(matches) > 1:
@@ -495,7 +554,7 @@ class ScanToPrintApp:
             self.status_text.set(i18n.t("status_sent", file=filename))
             self._log(i18n.t("log_printed", barcode=barcode, file=filename, printer=printer, copies=copies))
         except Exception as e:
-            messagebox.showerror(i18n.t("dlg_printer_error_title"), str(e))
+            self._show_error(i18n.t("dlg_printer_error_title"), str(e))
             self.status_text.set(i18n.t("status_print_failed"))
             self._log(i18n.t("log_print_failed", barcode=barcode, file=filename, error=str(e)), error=True)
 

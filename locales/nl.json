@@ -78,6 +78,13 @@
   "updater_uptodate_title": "Geen updates",
   "updater_uptodate_msg": "U gebruikt de nieuwste versie.",
 
+  "tray_restore": "Herstellen",
+  "tray_exit": "Afsluiten",
+  "tray_pause_scan": "Auto-scan pauzeren",
+  "tray_resume_scan": "Auto-scan hervatten",
+  "tray_notify_no_file_title": "Geen bestand gevonden",
+  "tray_notify_no_file_msg": "Geen bestand gevonden voor barcode: {barcode}",
+
   "frame_log": "5. Printlog",
   "log_printed": "OK  barcode={barcode}  bestand={file}  printer={printer}  kopieën={copies}",
   "log_no_file": "FOUT barcode={barcode}  geen bestand gevonden",

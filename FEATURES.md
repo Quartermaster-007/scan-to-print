@@ -147,7 +147,7 @@ Some scanners add a prefix or suffix to every scan (e.g. `]C1` for Code 128 AIM 
 
 ---
 
-## System tray / minimise to tray
+## System tray / minimise to tray ✅ Implemented
 
 Allow the app to run minimised in the Windows system tray so it stays available without taking up taskbar space.
 
@@ -165,6 +165,20 @@ Right-click menu should include
 - Exit app.
 - Stop/resume automatic scan-to-print functionallity.
 - Select any of the last 5 used languages.
+
+**Implementation notes:**
+- `tray.py` — `TrayManager` class wraps a `pystray.Icon` running in its own daemon thread; all menu-item callbacks dispatch back to the Tkinter thread via `root.after(0, fn)` for thread safety
+- Tray icon is always running while the app is open; minimising the window calls `root.withdraw()` (removes it from the taskbar); restoring calls `root.deiconify()` + `root.lift()`
+- `<Unmap>` event on the root window is used to detect minimise; the check `root.state() == "iconic"` filters out other unmap events (e.g. child windows)
+- Tray right-click menu: **Restore** (default / double-click), separator, **Pause/Resume auto-scan** (dynamic label), separator, **Exit**; language items are reserved for the Language prefix feature
+- Error notifications when minimised to tray use `pystray.Icon.notify()` (Windows balloon); when the window is visible, existing `messagebox` dialogs are used
+- `_show_error(title, msg)` helper centralises the logic: tray notify if `_minimized_to_tray`, else `messagebox.showwarning`
+- `build_status_icon(paused)` in `tray.py` loads `images/scan-to-print.png` (PIL fallback: solid blue square) and overlays a green (`#22c55e`) or grey (`#9ca3af`) dot in the bottom-right corner — matching the in-app `●` indicator colours
+- Both the tray icon and the window title-bar/taskbar icon reflect scan state: `_update_window_icon()` calls `root.iconphoto()` with an `ImageTk.PhotoImage`; icon is updated on startup and on every pause/resume toggle
+- `_apply_language()` calls `_tray.update_menu()` so the tray menu strings are rebuilt immediately when the UI language changes
+- `_restore_from_tray()` temporarily sets `-topmost True` before `lift()`/`focus_force()` then removes it after 100 ms — required on Windows to reliably steal foreground focus (e.g. when restoring from a balloon notification click)
+- `file_version_info.py`: PyInstaller version resource embedded in the exe; sets `FileDescription = "Scan to Print"` so Windows shows a readable name in tray/taskbar notification settings instead of the raw `.exe` filename; version tuples and strings are stamped by `build.py` and CI at build time
+- `build.py --clean-tray`: deletes `IconStreams` and `PastIconsStream` from `HKCU\...\TrayNotify` to wipe Windows' accumulated tray icon history (affects all apps; Explorer restart required)
 
 ---
 

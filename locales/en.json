@@ -78,6 +78,13 @@
   "updater_uptodate_title": "No updates",
   "updater_uptodate_msg": "You are up to date.",
 
+  "tray_restore": "Restore",
+  "tray_exit": "Exit",
+  "tray_pause_scan": "Pause auto-scan",
+  "tray_resume_scan": "Resume auto-scan",
+  "tray_notify_no_file_title": "No file found",
+  "tray_notify_no_file_msg": "No file found for barcode: {barcode}",
+
   "frame_log": "5. Print log",
   "log_printed": "OK  barcode={barcode}  file={file}  printer={printer}  copies={copies}",
   "log_no_file": "ERR barcode={barcode}  no matching file found",

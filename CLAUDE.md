@@ -77,6 +77,6 @@ When implementing a feature:
 - [x] Failure sound feedback
 - [x] Direct silent printing — pypdfium2 + Pillow, no dialog
 - [x] Print copies input + printer options dialog
-- [ ] System tray
+- [x] System tray
 - [ ] Language prefix
 - [x] Packaged as .exe — CI builds via PyInstaller on `windows-latest`, published as GitHub Release
