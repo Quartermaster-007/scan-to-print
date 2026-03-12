@@ -4,6 +4,7 @@ Main application window.
 import os
 import tkinter as tk
 import webbrowser
+import winsound
 from tkinter import ttk, filedialog, messagebox
 
 import i18n
@@ -470,6 +471,7 @@ class ScanToPrintApp:
         if not matches:
             self.status_text.set(i18n.t("status_no_file", barcode=barcode))
             self._log(i18n.t("log_no_file", barcode=barcode), error=True)
+            winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
             return
 
         if len(matches) > 1:
