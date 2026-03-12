@@ -281,6 +281,19 @@ The list of languages shown should follow the format:
 **Your answers:**
 - Filename separator: **hyphen** — e.g. barcode `12345678` with prefix `EN` looks for `EN-12345678.*` in the folder.
 
+**Implementation notes:**
+- `settings.py` — `prefix` group added: `enabled` (bool, default `false`), `language` (str, default `"EN"`), `recent` (list of up to 5 codes, default `[]`).
+- `language_window.py` — `LanguageWindow` redesigned as a two-panel dialog: left panel shows UI language radio buttons (`AVAILABLE_LANGUAGES`), right panel shows an enable-toggle checkbox and a grid (3 columns) of prefix language radio buttons (`AVAILABLE_PREFIX_LANGUAGES`). Accepts `on_apply_ui` and `on_apply_prefix(enabled, code)` callbacks plus a `focus_side` parameter.
+- `AVAILABLE_PREFIX_LANGUAGES` list in `language_window.py`: 24 European languages (BG, CA, HR, CS, DA, NL, EN, FI, FR, DE, EL, HU, IT, NO, PL, PT, RO, RU, SK, SL, ES, SV, TR, UK). Language names are translated via i18n keys and shown as `"{name} ({code})"`.
+- `app.py` — three new plain attributes: `_prefix_enabled: bool`, `_prefix_lang: str`, `_prefix_recent: list`; plus `_prefix_lang_var: tk.StringVar` for the combobox display.
+- **Prefix menu** added to menubar between Scanner and Help: single item "Language prefix…" opens the combined language window focused on the right panel.
+- **Scan frame** — prefix combobox (col 0) and dash label (col 1) inserted before the barcode entry (col 2); shown/hidden dynamically when the feature is toggled via `grid()` / `grid_remove()`.
+- `_on_barcode` — when `_prefix_enabled` is `True`, prepends `"{prefix_lang}-"` to the scanned barcode before file lookup.
+- `_push_prefix_recent(code)` — inserts code at front of `_prefix_recent`, removes duplicates, trims to 5; called on every prefix language change.
+- `tray.py` — `TrayManager` accepts optional kwargs: `get_prefix_enabled`, `get_recent_prefix`, `get_prefix_lang`, `on_toggle_prefix`, `on_set_prefix_lang`. Tray menu has a "Language prefix" item with a radio indicator (checked when enabled); when enabled and recent list is non-empty, recent languages appear directly below it in the main menu with radio indicators (filled on the active language).
+- `_toggle_prefix()` in `app.py` — flips `_prefix_enabled`, saves settings, and refreshes the UI; called from both the tray toggle and the language window.
+- Locales (`en.json`, `nl.json`) — new keys: `lang_window_title`, `lang_window_ui_label`, `prefix_window_title`, `prefix_window_enable`, `prefix_window_lang_label`, `menu_prefix`, `menu_prefix_settings`, `lbl_prefix_lang`, `tray_prefix_enable`, plus 24 `lang_XX` keys for language names.
+
 ---
 
 ## App updates via Github ✅ Implemented

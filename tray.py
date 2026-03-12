@@ -53,12 +53,22 @@ class TrayManager:
         on_exit,
         on_toggle_scan,
         get_scan_paused,
+        get_prefix_enabled=None,
+        get_recent_prefix=None,
+        get_prefix_lang=None,
+        on_toggle_prefix=None,
+        on_set_prefix_lang=None,
     ):
         self._root = root
         self._on_restore = on_restore
         self._on_exit = on_exit
         self._on_toggle_scan = on_toggle_scan
         self._get_scan_paused = get_scan_paused
+        self._get_prefix_enabled = get_prefix_enabled or (lambda: False)
+        self._get_recent_prefix = get_recent_prefix or (lambda: [])
+        self._get_prefix_lang = get_prefix_lang or (lambda: None)
+        self._on_toggle_prefix = on_toggle_prefix or (lambda: None)
+        self._on_set_prefix_lang = on_set_prefix_lang or (lambda _: None)
 
         self._icon = None  # pystray.Icon
         self._thread = None  # threading.Thread
@@ -110,7 +120,7 @@ class TrayManager:
     # ------------------------------------------------------------------
 
     def _build_menu(self) -> pystray.Menu:
-        return pystray.Menu(
+        items = [
             pystray.MenuItem(
                 i18n.t("tray_restore"),
                 self._cb_restore,
@@ -122,8 +132,40 @@ class TrayManager:
                 self._cb_toggle_scan,
             ),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem(i18n.t("tray_exit"), self._cb_exit),
-        )
+            pystray.MenuItem(
+                i18n.t("tray_prefix_enable"),
+                self._cb_toggle_prefix,
+                checked=lambda _item: self._get_prefix_enabled(),
+                radio=True,
+            ),
+        ]
+
+        # Add recent prefix languages directly in the main menu
+        if self._get_prefix_enabled():
+            recent = self._get_recent_prefix()
+            if recent:
+                from language_window import AVAILABLE_PREFIX_LANGUAGES
+                lang_map = {code: i18n.t(key) for key, code in AVAILABLE_PREFIX_LANGUAGES}
+                for code in recent:
+                    label = lang_map.get(code, code)
+                    display = f"{label} ({code})"
+                    cb = self._make_prefix_cb(code)
+                    c = code
+                    items.append(pystray.MenuItem(
+                        display, cb,
+                        checked=lambda _item, c=c: self._get_prefix_lang() == c,
+                        radio=True,
+                    ))
+
+        items.append(pystray.Menu.SEPARATOR)
+        items.append(pystray.MenuItem(i18n.t("tray_exit"), self._cb_exit))
+        return pystray.Menu(*items)
+
+    def _make_prefix_cb(self, code: str):
+        """Return a pystray callback that sets the prefix language to `code`."""
+        def cb(_icon, _item):
+            self._root.after(0, lambda: self._on_set_prefix_lang(code))
+        return cb
 
     def _scan_toggle_label(self, _item) -> str:
         if self._get_scan_paused():
@@ -138,3 +180,6 @@ class TrayManager:
 
     def _cb_toggle_scan(self, _icon, _item) -> None:
         self._root.after(0, self._on_toggle_scan)
+
+    def _cb_toggle_prefix(self, _icon, _item) -> None:
+        self._root.after(0, self._on_toggle_prefix)
