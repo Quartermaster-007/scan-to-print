@@ -147,7 +147,7 @@ Some scanners add a prefix or suffix to every scan (e.g. `]C1` for Code 128 AIM 
 
 ---
 
-## System tray / minimise to tray
+## System tray / minimise to tray ✅ Implemented
 
 Allow the app to run minimised in the Windows system tray so it stays available without taking up taskbar space.
 
@@ -165,6 +165,15 @@ Right-click menu should include
 - Exit app.
 - Stop/resume automatic scan-to-print functionallity.
 - Select any of the last 5 used languages.
+
+**Implementation notes:**
+- `tray.py` — `TrayManager` class wraps a `pystray.Icon` running in its own daemon thread; all menu-item callbacks dispatch back to the Tkinter thread via `root.after(0, fn)` for thread safety
+- Tray icon is always running while the app is open; minimising the window calls `root.withdraw()` (removes it from the taskbar); restoring calls `root.deiconify()` + `root.lift()`
+- `<Unmap>` event on the root window is used to detect minimise; the check `root.state() == "iconic"` filters out other unmap events (e.g. child windows)
+- Tray right-click menu: **Restore** (default / double-click), separator, **Pause/Resume auto-scan** (dynamic label), separator, **Exit**; language items are reserved for the Language prefix feature
+- Error notifications when minimised to tray use `pystray.Icon.notify()` (Windows balloon); when the window is visible, existing `messagebox` dialogs are used
+- `_show_error(title, msg)` helper centralises the logic: tray notify if `_minimized_to_tray`, else `messagebox.showwarning`
+- The tray icon image is loaded from `images/scan-to-print.png` with a PIL fallback (plain coloured square) in case the file is missing
 
 ---
 
