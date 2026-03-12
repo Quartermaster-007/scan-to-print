@@ -108,6 +108,10 @@ Let the user specify how many copies to print, or choose a different paper tray/
 - The print setting should be a global setting for that session. If there are any specifics to be saved, then sotre those in `settings.json` to be used between sessions.
 - By default the app should just print 1 copy. But if needed the user should be able to adjust a copy number input, which reverts back to 1 after a successfull scan-to-print.
 
+**Implementation notes:**
+- `app.py` — `self._copies` (`IntVar`, default 1); a "Copies:" `ttk.Spinbox` (range 1–99) sits below the barcode entry in the scan frame; resets to 1 after each successful print
+- `printer.py` — `print_file`, `_print_pdf`, `_print_image` each accept a `copies: int = 1` parameter; PDF pages are pre-rendered once and the page sequence is repeated N times in a single GDI job; image `Dib` is created once and drawn N times in the same job; `copies` is clamped to `max(1, int(copies))` in `print_file`
+
 ---
 
 ## Feature 6 — Barcode prefix / suffix filtering
