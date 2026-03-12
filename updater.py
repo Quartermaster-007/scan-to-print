@@ -12,6 +12,8 @@ from tkinter import messagebox, ttk
 
 import requests
 
+import i18n
+
 GITHUB_REPO = "Quartermaster-007/scan-to-print"
 _API_STABLE = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 _API_ALL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
@@ -104,17 +106,17 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
     new_exe = os.path.join(tempfile.gettempdir(), "ScanToPrint_new.exe")
 
     dlg = tk.Toplevel(root)
-    dlg.title("Downloading update")
+    dlg.title(i18n.t("updater_downloading_title"))
     dlg.resizable(False, False)
     dlg.grab_set()
     dlg.protocol("WM_DELETE_WINDOW", lambda: None)  # block close during download
 
-    tk.Label(dlg, text=f"Downloading version {tag}…", font=("TkDefaultFont", 10, "bold")).pack(
+    tk.Label(dlg, text=i18n.t("updater_downloading_label", tag=tag), font=("TkDefaultFont", 10, "bold")).pack(
         padx=24, pady=(18, 8)
     )
     progress = ttk.Progressbar(dlg, length=320, mode="determinate")
     progress.pack(padx=24, pady=(0, 6))
-    status_var = tk.StringVar(value="Connecting…")
+    status_var = tk.StringVar(value=i18n.t("updater_connecting"))
     tk.Label(dlg, textvariable=status_var).pack(padx=24, pady=(0, 18))
 
     def _on_progress(downloaded: int, total: int) -> None:
@@ -132,8 +134,8 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
     def _on_error(msg: str) -> None:
         dlg.destroy()
         messagebox.showerror(
-            "Update failed",
-            f"Download failed:\n{msg}\n\nPlease download the update manually.",
+            i18n.t("updater_failed_title"),
+            i18n.t("updater_failed_msg", error=msg),
         )
 
     def _download() -> None:
@@ -156,17 +158,17 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
 
 def _show_update_dialog(root: tk.Tk, tag: str, url: str, download_url: str | None) -> None:
     dlg = tk.Toplevel(root)
-    dlg.title("Update available")
+    dlg.title(i18n.t("updater_available_title"))
     dlg.resizable(False, False)
     dlg.grab_set()
 
-    tk.Label(dlg, text=f"Version {tag} is available.", font=("TkDefaultFont", 11, "bold")).pack(
+    tk.Label(dlg, text=i18n.t("updater_available_msg", tag=tag), font=("TkDefaultFont", 11, "bold")).pack(
         padx=24, pady=(18, 6)
     )
     if download_url:
-        tk.Label(dlg, text="Would you like to update now?").pack(padx=24, pady=(0, 16))
+        tk.Label(dlg, text=i18n.t("updater_update_now_prompt")).pack(padx=24, pady=(0, 16))
     else:
-        tk.Label(dlg, text="Open the download page to install manually?").pack(padx=24, pady=(0, 16))
+        tk.Label(dlg, text=i18n.t("updater_manual_prompt")).pack(padx=24, pady=(0, 16))
 
     btn_frame = tk.Frame(dlg)
     btn_frame.pack(pady=(0, 18))
@@ -180,13 +182,13 @@ def _show_update_dialog(root: tk.Tk, tag: str, url: str, download_url: str | Non
         webbrowser.open(url)
 
     if download_url:
-        ttk.Button(btn_frame, text="Update now", command=update_now).pack(side="left", padx=6)
-    ttk.Button(btn_frame, text="Download manually", command=download_manually).pack(side="left", padx=6)
-    ttk.Button(btn_frame, text="Later", command=dlg.destroy).pack(side="left", padx=6)
+        ttk.Button(btn_frame, text=i18n.t("btn_update_now"), command=update_now).pack(side="left", padx=6)
+    ttk.Button(btn_frame, text=i18n.t("btn_download_manually"), command=download_manually).pack(side="left", padx=6)
+    ttk.Button(btn_frame, text=i18n.t("btn_later"), command=dlg.destroy).pack(side="left", padx=6)
 
 
 def _show_up_to_date() -> None:
-    messagebox.showinfo("No updates", "You are up to date.")
+    messagebox.showinfo(i18n.t("updater_uptodate_title"), i18n.t("updater_uptodate_msg"))
 
 
 def check_for_updates(

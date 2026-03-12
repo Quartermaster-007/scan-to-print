@@ -72,7 +72,7 @@ When implementing a feature:
 - [x] Persistent settings — `settings.py`, File menu, window size, last folder/printer
 - [x] Auto scan-to-print / global keyboard hook — `pynput` listener, pause toggle, speed check window
 - [x] GitHub update check + in-app self-update — `updater.py`, `version.py`, `.github/workflows/release.yml`
-- [ ] UI language selection
+- [x] UI language selection
 - [ ] Print history / log
 - [ ] Failure sound feedback
 - [x] Direct silent printing — pypdfium2 + Pillow, no dialog

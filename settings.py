@@ -16,6 +16,7 @@ _DEFAULTS = {
     "ui": {
         "window_width": 0,
         "window_height": 0,
+        "language": "en",
     },
     "scanner": {
         "auto_scan": True,

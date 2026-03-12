@@ -224,11 +224,20 @@ The app should monitor input from the barcode scanner and attempt to print any d
 
 ---
 
-## Language selection for UI
+## Language selection for UI ✅ Implemented
 
 User can select the language used in the app for all the strings and logs. Include English and Dutch as options at first. In the menubar, under 'File', then 'Preferences', include a button for language selection that opens a new UI screen for selection of available languages. Save the used language to `settings.json` and use the store value whenever available.
 
 **Implementation note:** All UI strings (labels, buttons, status messages, log entries, tray menu items) will be stored in a `locales/` dictionary (e.g. `locales/en.json`, `locales/nl.json`). English is the fallback for any untranslated string. The language screen will show a simple list with radio buttons.
+
+**Implementation notes:**
+- `i18n.py` — `load(lang_code)` reads `locales/<lang>.json` with English as fallback; `t(key, **kwargs)` returns the translated string with optional `str.format` placeholders
+- `locales/en.json`, `locales/nl.json` — flat key/value files covering all labels, buttons, menu items, status messages, and dialog strings for `app.py` and `speedcheck.py`
+- `language_window.py` — modal `LanguageWindow` with radio buttons for each available language; calls `on_apply(lang_code)` on confirm
+- `app.py` — loads language in `__init__` before building any UI; all hardcoded strings replaced with `i18n.t()`; `_open_language_window()` opens the selector; `_apply_language()` destroys and rebuilds all widgets in the new language without restarting
+- `speedcheck.py` — all hardcoded strings replaced with `i18n.t()`
+- `settings.py` — `ui.language` key added (default `"en"`); persisted in `settings.json`
+- Language change is instant — no restart required; scanner state and printer selection are preserved across the rebuild
 
 ---
 
