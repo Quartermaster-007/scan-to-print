@@ -108,16 +108,17 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
     dlg = tk.Toplevel(root)
     dlg.title(i18n.t("updater_downloading_title"))
     dlg.resizable(False, False)
+    dlg.transient(root)
     dlg.grab_set()
     dlg.protocol("WM_DELETE_WINDOW", lambda: None)  # block close during download
 
-    tk.Label(dlg, text=i18n.t("updater_downloading_label", tag=tag), font=("TkDefaultFont", 10, "bold")).pack(
+    ttk.Label(dlg, text=i18n.t("updater_downloading_label", tag=tag), font=("TkDefaultFont", 10, "bold")).pack(
         padx=24, pady=(18, 8)
     )
     progress = ttk.Progressbar(dlg, length=320, mode="determinate")
     progress.pack(padx=24, pady=(0, 6))
     status_var = tk.StringVar(value=i18n.t("updater_connecting"))
-    tk.Label(dlg, textvariable=status_var).pack(padx=24, pady=(0, 18))
+    ttk.Label(dlg, textvariable=status_var).pack(padx=24, pady=(0, 18))
 
     def _on_progress(downloaded: int, total: int) -> None:
         if total:
@@ -160,17 +161,18 @@ def _show_update_dialog(root: tk.Tk, tag: str, url: str, download_url: str | Non
     dlg = tk.Toplevel(root)
     dlg.title(i18n.t("updater_available_title"))
     dlg.resizable(False, False)
+    dlg.transient(root)
     dlg.grab_set()
 
-    tk.Label(dlg, text=i18n.t("updater_available_msg", tag=tag), font=("TkDefaultFont", 11, "bold")).pack(
+    ttk.Label(dlg, text=i18n.t("updater_available_msg", tag=tag), font=("TkDefaultFont", 11, "bold")).pack(
         padx=24, pady=(18, 6)
     )
     if download_url:
-        tk.Label(dlg, text=i18n.t("updater_update_now_prompt")).pack(padx=24, pady=(0, 16))
+        ttk.Label(dlg, text=i18n.t("updater_update_now_prompt")).pack(padx=24, pady=(0, 16))
     else:
-        tk.Label(dlg, text=i18n.t("updater_manual_prompt")).pack(padx=24, pady=(0, 16))
+        ttk.Label(dlg, text=i18n.t("updater_manual_prompt")).pack(padx=24, pady=(0, 16))
 
-    btn_frame = tk.Frame(dlg)
+    btn_frame = ttk.Frame(dlg)
     btn_frame.pack(pady=(0, 18))
 
     def update_now() -> None:

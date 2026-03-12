@@ -28,13 +28,17 @@ def _suggest(max_gap_ms: float) -> int:
 
 
 class SpeedcheckWindow:
-    def __init__(self, parent, current_threshold: int, on_apply):
+    def __init__(self, parent, current_threshold: int, on_apply, on_cancel=None):
         """
         parent           — Tkinter root/toplevel
         current_threshold — scanner's current threshold_ms
         on_apply(ms: int) — called when user clicks Apply or Reset
+        on_cancel()       — called when user closes without applying
         """
         self._on_apply = on_apply
+        self._on_cancel = on_cancel
+        self._applied = False
+        self._suggested = current_threshold
         self._current_threshold = current_threshold
         self._lock = threading.Lock()
         self._timestamps: list[float] = []
@@ -43,6 +47,7 @@ class SpeedcheckWindow:
         self._win = tk.Toplevel(parent)
         self._win.title(i18n.t("speedcheck_title"))
         self._win.resizable(False, False)
+        self._win.transient(parent)
         self._win.grab_set()
 
         self._build_ui(current_threshold)
@@ -146,14 +151,18 @@ class SpeedcheckWindow:
     # ------------------------------------------------------------------
 
     def _apply(self):
+        self._applied = True
         self._on_apply(self._suggested)
         self._close()
 
     def _reset(self):
+        self._applied = True
         self._on_apply(DEFAULT_THRESHOLD)
         self._close()
 
     def _close(self):
         if self._listener:
             self._listener.stop()
+        if not self._applied and self._on_cancel:
+            self._on_cancel()
         self._win.destroy()

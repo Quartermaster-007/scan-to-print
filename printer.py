@@ -64,34 +64,35 @@ def _print_pdf(file_path: str, printer_name: str, copies: int = 1, devmode=None)
     from PIL import ImageWin
 
     pdf = pdfium.PdfDocument(file_path)
-    pdc = _make_printer_dc(printer_name, devmode)
-
-    printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
-    printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
-    dpi = pdc.GetDeviceCaps(win32con.LOGPIXELSX)
-    scale = max(dpi / 72.0, 1.0)  # PDF points are 1/72 inch
-
-    # Pre-render all pages once; repeat per copy
-    pages = []
-    for i in range(len(pdf)):
-        bitmap = pdf[i].render(scale=scale)
-        pages.append(bitmap.to_pil().convert("RGB"))
-
-    pdc.StartDoc(os.path.basename(file_path))
     try:
-        for _ in range(copies):
-            for img in pages:
-                draw_w, draw_h = _fit_rect(img.width, img.height, printable_w, printable_h)
-                pdc.StartPage()
-                ImageWin.Dib(img).draw(pdc.GetHandleOutput(), (0, 0, draw_w, draw_h))
-                pdc.EndPage()
+        pdc = _make_printer_dc(printer_name, devmode)
+        try:
+            printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
+            printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
+            dpi = pdc.GetDeviceCaps(win32con.LOGPIXELSX)
+            scale = max(dpi / 72.0, 1.0)  # PDF points are 1/72 inch
 
-        pdc.EndDoc()
-    except Exception:
-        pdc.AbortDoc()
-        raise
+            # Pre-render all pages once; repeat per copy
+            pages = []
+            for i in range(len(pdf)):
+                bitmap = pdf[i].render(scale=scale)
+                pages.append(bitmap.to_pil().convert("RGB"))
+
+            pdc.StartDoc(os.path.basename(file_path))
+            try:
+                for _ in range(copies):
+                    for img in pages:
+                        draw_w, draw_h = _fit_rect(img.width, img.height, printable_w, printable_h)
+                        pdc.StartPage()
+                        ImageWin.Dib(img).draw(pdc.GetHandleOutput(), (0, 0, draw_w, draw_h))
+                        pdc.EndPage()
+                pdc.EndDoc()
+            except Exception:
+                pdc.AbortDoc()
+                raise
+        finally:
+            pdc.DeleteDC()
     finally:
-        pdc.DeleteDC()
         pdf.close()
 
 

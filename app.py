@@ -159,7 +159,7 @@ class ScanToPrintApp:
         print_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_print_settings"))
         print_frame.grid(row=2, column=0, sticky="ew", **pad)
 
-        tk.Label(print_frame, text=i18n.t("lbl_copies")).grid(
+        ttk.Label(print_frame, text=i18n.t("lbl_copies")).grid(
             row=0, column=0, padx=(8, 4), pady=8, sticky="w"
         )
         ttk.Spinbox(
@@ -184,7 +184,7 @@ class ScanToPrintApp:
         self.barcode_entry.grid(row=0, column=0, padx=5, pady=10, sticky="ew")
         self._scan_indicator = tk.Label(scan_frame, text="●", font=("TkDefaultFont", 14), fg="#22c55e")
         self._scan_indicator.grid(row=0, column=1, padx=(6, 2))
-        tk.Label(scan_frame, text=i18n.t("lbl_autoscan")).grid(row=0, column=2, padx=(0, 8))
+        ttk.Label(scan_frame, text=i18n.t("lbl_autoscan")).grid(row=0, column=2, padx=(0, 8))
 
         # --- Status bar ---
         ttk.Label(self.root, textvariable=self.status_text, relief="sunken", anchor="w").grid(
@@ -310,7 +310,12 @@ class ScanToPrintApp:
                 self._update_scan_indicator()
             self._save_settings()
 
-        SpeedcheckWindow(self.root, self.scanner.threshold_ms, on_apply)
+        def on_cancel():
+            if not was_paused:
+                self.scanner.toggle()
+                self._update_scan_indicator()
+
+        SpeedcheckWindow(self.root, self.scanner.threshold_ms, on_apply, on_cancel)
 
     def _update_scan_indicator(self):
         if self.scanner.paused:
@@ -373,20 +378,21 @@ class ScanToPrintApp:
         dlg = tk.Toplevel(self.root)
         dlg.title(i18n.t("about_title"))
         dlg.resizable(False, False)
+        dlg.transient(self.root)
         dlg.grab_set()
 
-        tk.Label(dlg, text=i18n.t("about_app_name"), font=("TkDefaultFont", 14, "bold")).pack(pady=(20, 4))
-        tk.Label(dlg, text=f"Version {__version__}").pack()
-        tk.Label(dlg, text=i18n.t("about_tagline")).pack(pady=(4, 12))
+        ttk.Label(dlg, text=i18n.t("about_app_name"), font=("TkDefaultFont", 14, "bold")).pack(pady=(20, 4))
+        ttk.Label(dlg, text=f"Version {__version__}").pack()
+        ttk.Label(dlg, text=i18n.t("about_tagline")).pack(pady=(4, 12))
 
         link = tk.Label(dlg, text="github.com/Quartermaster-007/scan-to-print",
                         fg="blue", cursor="hand2")
         link.pack()
         link.bind("<Button-1>", lambda _: webbrowser.open(GITHUB_URL))
 
-        tk.Label(dlg, text="MIT License").pack(pady=(12, 16))
+        ttk.Label(dlg, text="MIT License").pack(pady=(12, 16))
 
-        btn_frame = tk.Frame(dlg)
+        btn_frame = ttk.Frame(dlg)
         btn_frame.pack(pady=(0, 16))
         ttk.Button(btn_frame, text=i18n.t("btn_check_updates"), command=lambda: [
             dlg.destroy(),
@@ -441,6 +447,7 @@ class ScanToPrintApp:
     def _pick_file(self, files):
         dialog = tk.Toplevel(self.root)
         dialog.title(i18n.t("dlg_multi_title"))
+        dialog.transient(self.root)
         dialog.grab_set()
         chosen = tk.StringVar()
 
