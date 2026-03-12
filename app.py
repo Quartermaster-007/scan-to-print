@@ -44,6 +44,13 @@ class ScanToPrintApp:
         self._log_text = None   # set by _build_ui
         self._minimized_to_tray = False
 
+        # Language prefix
+        self._prefix_enabled: bool = self._settings["prefix"]["enabled"]
+        self._prefix_lang: str = self._settings["prefix"]["language"]
+        self._prefix_recent: list = list(self._settings["prefix"]["recent"])
+        self._prefix_lang_var = tk.StringVar()  # display var for scan-frame combobox
+        self._prefix_combo = None  # set by _build_ui
+
         self._build_menu()
         self._build_ui()
         self._apply_window_size()
@@ -74,6 +81,9 @@ class ScanToPrintApp:
             on_exit=self._on_close,
             on_toggle_scan=self._toggle_scanner,
             get_scan_paused=lambda: self.scanner.paused,
+            get_prefix_enabled=lambda: self._prefix_enabled,
+            get_recent_prefix=lambda: list(self._prefix_recent),
+            on_set_prefix_lang=self._set_prefix_lang,
         )
         self._tray.start()
         self._window_icon_ref = None  # keeps ImageTk.PhotoImage alive
@@ -131,6 +141,14 @@ class ScanToPrintApp:
             label=i18n.t("menu_speed_check"), command=self._open_speedcheck
         )
         menubar.add_cascade(label=i18n.t("menu_scanner"), menu=self._scanner_menu)
+
+        # Prefix menu
+        self._prefix_menu = tk.Menu(menubar, tearoff=0)
+        self._prefix_menu.add_command(
+            label=i18n.t("menu_prefix_settings"), command=self._open_prefix_window
+        )
+        self._rebuild_prefix_recent_menu()
+        menubar.add_cascade(label=i18n.t("menu_prefix"), menu=self._prefix_menu)
 
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -207,6 +225,25 @@ class ScanToPrintApp:
         self._scan_label = tk.Label(scan_frame, text=i18n.t("lbl_autoscan"), cursor="hand2")
         self._scan_label.grid(row=0, column=2, padx=(0, 8))
         self._scan_label.bind("<Button-1>", lambda _e: self._toggle_scanner())
+
+        # Prefix language row (shown only when prefix feature is enabled)
+        self._prefix_row_label = ttk.Label(scan_frame, text=i18n.t("lbl_prefix_lang"))
+        from language_window import AVAILABLE_PREFIX_LANGUAGES
+        prefix_options = [f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES]
+        # Set display value for current code
+        current_display = next(
+            (f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
+            prefix_options[0],
+        )
+        self._prefix_lang_var.set(current_display)
+        self._prefix_combo = ttk.Combobox(
+            scan_frame, textvariable=self._prefix_lang_var,
+            values=prefix_options, state="readonly", width=18,
+        )
+        self._prefix_combo.bind("<<ComboboxSelected>>", self._on_prefix_lang_changed)
+        if self._prefix_enabled:
+            self._prefix_row_label.grid(row=1, column=0, padx=(5, 2), pady=(0, 8), sticky="w")
+            self._prefix_combo.grid(row=1, column=1, columnspan=2, padx=(0, 8), pady=(0, 8), sticky="w")
 
         # --- Log ---
         log_frame = ttk.LabelFrame(self.root, text=i18n.t("frame_log"))
@@ -312,6 +349,11 @@ class ScanToPrintApp:
             "updates": {
                 "channel": self._update_channel.get(),
             },
+            "prefix": {
+                "enabled": self._prefix_enabled,
+                "language": self._prefix_lang,
+                "recent": self._prefix_recent,
+            },
         })
 
     def _on_folder_changed(self, *_):
@@ -375,7 +417,13 @@ class ScanToPrintApp:
     # ------------------------------------------------------------------
 
     def _open_language_window(self):
-        def on_apply(lang_code: str):
+        self._open_combined_language_window(focus_side="ui")
+
+    def _open_prefix_window(self):
+        self._open_combined_language_window(focus_side="prefix")
+
+    def _open_combined_language_window(self, focus_side: str = "ui"):
+        def on_apply_ui(lang_code: str):
             if lang_code == self._language:
                 return
             self._language = lang_code
@@ -383,7 +431,25 @@ class ScanToPrintApp:
             i18n.load(lang_code)
             self._apply_language()
 
-        LanguageWindow(self.root, self._language, on_apply)
+        def on_apply_prefix(enabled: bool, lang_code: str):
+            changed = (enabled != self._prefix_enabled) or (lang_code != self._prefix_lang)
+            self._prefix_enabled = enabled
+            if lang_code != self._prefix_lang:
+                self._prefix_lang = lang_code
+                self._push_prefix_recent(lang_code)
+            if changed:
+                self._save_settings()
+                self._apply_prefix_ui()
+
+        LanguageWindow(
+            self.root,
+            self._language,
+            on_apply_ui,
+            self._prefix_lang,
+            self._prefix_enabled,
+            on_apply_prefix,
+            focus_side=focus_side,
+        )
 
     def _apply_language(self):
         """Rebuild all widgets in the current language."""
@@ -397,6 +463,79 @@ class ScanToPrintApp:
         self._refresh_log()
         if hasattr(self, "_tray"):
             self._tray.update_menu()
+
+    # ------------------------------------------------------------------
+    # Prefix helpers
+    # ------------------------------------------------------------------
+
+    def _push_prefix_recent(self, code: str):
+        """Add code to the front of the recent list (max 5, no duplicates)."""
+        if code in self._prefix_recent:
+            self._prefix_recent.remove(code)
+        self._prefix_recent.insert(0, code)
+        self._prefix_recent = self._prefix_recent[:5]
+
+    def _on_prefix_lang_changed(self, *_):
+        """Called when the scan-frame prefix combobox selection changes."""
+        display = self._prefix_lang_var.get()
+        code = display.split("(")[-1].rstrip(")")
+        if code != self._prefix_lang:
+            self._prefix_lang = code
+            self._push_prefix_recent(code)
+            self._save_settings()
+            self._rebuild_prefix_recent_menu()
+            if hasattr(self, "_tray"):
+                self._tray.update_menu()
+
+    def _apply_prefix_ui(self):
+        """Show or hide the prefix row in the scan frame after a settings change."""
+        if self._prefix_combo is None:
+            return
+        # Update display var to match current code
+        from language_window import AVAILABLE_PREFIX_LANGUAGES
+        current_display = next(
+            (f"{lbl} ({code})" for lbl, code in AVAILABLE_PREFIX_LANGUAGES if code == self._prefix_lang),
+            self._prefix_lang_var.get(),
+        )
+        self._prefix_lang_var.set(current_display)
+        if self._prefix_enabled:
+            self._prefix_row_label.grid(row=1, column=0, padx=(5, 2), pady=(0, 8), sticky="w")
+            self._prefix_combo.grid(row=1, column=1, columnspan=2, padx=(0, 8), pady=(0, 8), sticky="w")
+        else:
+            self._prefix_row_label.grid_remove()
+            self._prefix_combo.grid_remove()
+        self._rebuild_prefix_recent_menu()
+        if hasattr(self, "_tray"):
+            self._tray.update_menu()
+
+    def _rebuild_prefix_recent_menu(self):
+        """Rebuild the recent-languages entries in the Prefix menu."""
+        if not hasattr(self, "_prefix_menu"):
+            return
+        # Remove everything after the first item (Prefix settings...)
+        end = self._prefix_menu.index("end")
+        if end is not None and end >= 1:
+            self._prefix_menu.delete(1, "end")
+        if self._prefix_recent:
+            self._prefix_menu.add_separator()
+            from language_window import AVAILABLE_PREFIX_LANGUAGES
+            lang_map = {code: lbl for lbl, code in AVAILABLE_PREFIX_LANGUAGES}
+            for code in self._prefix_recent:
+                label = lang_map.get(code, code)
+                display = f"{label} ({code})"
+                self._prefix_menu.add_command(
+                    label=display,
+                    command=lambda c=code: self._set_prefix_lang(c),
+                )
+
+    def _set_prefix_lang(self, code: str):
+        """Quick-select a prefix language from the menu or tray."""
+        if code == self._prefix_lang:
+            return
+        self._prefix_lang = code
+        self._push_prefix_recent(code)
+        self._save_settings()
+        self._apply_prefix_ui()
 
     # ------------------------------------------------------------------
     # UI actions
@@ -510,20 +649,23 @@ class ScanToPrintApp:
         ttk.Button(btn_frame, text=i18n.t("btn_close"), command=dlg.destroy).pack(side="left", padx=6)
 
     def _on_barcode(self, barcode):
-        self.status_text.set(i18n.t("status_barcode_received", barcode=barcode))
+        # Apply language prefix if enabled
+        effective_barcode = f"{self._prefix_lang}-{barcode}" if self._prefix_enabled else barcode
+        self.status_text.set(i18n.t("status_barcode_received", barcode=effective_barcode))
         folder = self.folder_path.get()
         printer = self.selected_printer.get()
 
         if not folder:
-            self._log(i18n.t("log_no_folder", barcode=barcode), error=True)
+            self._log(i18n.t("log_no_folder", barcode=effective_barcode), error=True)
             self._show_error(i18n.t("dlg_no_folder_title"), i18n.t("dlg_no_folder_msg"))
             return
         if not printer:
-            self._log(i18n.t("log_no_printer", barcode=barcode), error=True)
+            self._log(i18n.t("log_no_printer", barcode=effective_barcode), error=True)
             self._show_error(i18n.t("dlg_no_printer_title"), i18n.t("dlg_no_printer_msg"))
             return
 
-        matches = [f for f in os.listdir(folder) if os.path.splitext(f)[0] == barcode]
+        matches = [f for f in os.listdir(folder) if os.path.splitext(f)[0] == effective_barcode]
+        barcode = effective_barcode  # use prefixed value for all subsequent references
 
         if not matches:
             self.status_text.set(i18n.t("status_no_file", barcode=barcode))

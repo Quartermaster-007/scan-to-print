@@ -58,8 +58,15 @@
   "btn_apply_save": "Apply & Save",
   "btn_reset_default": "Reset to Default",
 
-  "lang_window_title": "Language",
+  "lang_window_title": "Language & Prefix",
+  "lang_window_ui_label": "UI language",
   "lang_window_label": "Select language:",
+  "prefix_window_title": "Language prefix",
+  "prefix_window_enable": "Enable language prefix",
+  "prefix_window_lang_label": "Select prefix language:",
+  "menu_prefix": "Prefix",
+  "menu_prefix_settings": "Prefix settings...",
+  "lbl_prefix_lang": "Prefix:",
   "btn_apply": "Apply",
   "btn_cancel": "Cancel",
 

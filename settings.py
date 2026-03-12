@@ -25,6 +25,11 @@ _DEFAULTS = {
     "updates": {
         "channel": "stable",
     },
+    "prefix": {
+        "enabled": False,
+        "language": "EN",
+        "recent": [],
+    },
 }
 
 

@@ -281,6 +281,19 @@ The list of languages shown should follow the format:
 **Your answers:**
 - Filename separator: **hyphen** — e.g. barcode `12345678` with prefix `EN` looks for `EN-12345678.*` in the folder.
 
+**Implementation notes:**
+- `settings.py` — `prefix` group added: `enabled` (bool, default `false`), `language` (str, default `"EN"`), `recent` (list of up to 5 codes, default `[]`).
+- `language_window.py` — `LanguageWindow` redesigned as a two-panel dialog: left panel shows UI language radio buttons (`AVAILABLE_LANGUAGES`), right panel shows an enable-toggle checkbox and a list of prefix language radio buttons (`AVAILABLE_PREFIX_LANGUAGES`). Accepts `on_apply_ui` and `on_apply_prefix(enabled, code)` callbacks plus a `focus_side` parameter.
+- `AVAILABLE_PREFIX_LANGUAGES` list in `language_window.py`: English (EN), German (DE), French (FR), Dutch (NL).
+- `app.py` — three new plain attributes: `_prefix_enabled: bool`, `_prefix_lang: str`, `_prefix_recent: list`; plus `_prefix_lang_var: tk.StringVar` for the combobox display.
+- **Prefix menu** added to menubar between Scanner and Help: "Prefix settings…" opens the combined language window focused on the right panel; recent languages (up to 5) appear below a separator as quick-select commands.
+- **Scan frame** gains a second row (row 1) with a "Prefix:" label and a read-only `ttk.Combobox` showing `"{label} ({code})"` entries; this row is grid'd in / removed dynamically when the feature is toggled.
+- `_on_barcode` — when `_prefix_enabled` is `True`, prepends `"{prefix_lang}-"` to the scanned barcode before file lookup.
+- `_push_prefix_recent(code)` — inserts code at front of `_prefix_recent`, removes duplicates, trims to 5; called on every prefix language change.
+- `_rebuild_prefix_recent_menu()` — replaces all Prefix menu entries after position 0 with a separator + recent language commands.
+- `tray.py` — `TrayManager` accepts three new optional kwargs: `get_prefix_enabled`, `get_recent_prefix`, `on_set_prefix_lang`; when the feature is enabled and recent list is non-empty, a "Prefix language" submenu is appended to the tray menu with one item per recent language; `_make_prefix_cb(code)` produces type-safe per-item callbacks that dispatch via `root.after`.
+- Locales (`en.json`, `nl.json`) — new keys: `prefix_window_title`, `prefix_window_enable`, `prefix_window_lang_label`, `lang_window_ui_label`, `menu_prefix`, `menu_prefix_settings`, `lbl_prefix_lang`.
+
 ---
 
 ## App updates via Github ✅ Implemented

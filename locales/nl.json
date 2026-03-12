@@ -58,8 +58,15 @@
   "btn_apply_save": "Toepassen & Opslaan",
   "btn_reset_default": "Standaard instellen",
 
-  "lang_window_title": "Taal",
+  "lang_window_title": "Taal & Prefix",
+  "lang_window_ui_label": "UI-taal",
   "lang_window_label": "Selecteer taal:",
+  "prefix_window_title": "Taalprefix",
+  "prefix_window_enable": "Taalprefix inschakelen",
+  "prefix_window_lang_label": "Selecteer prefixtaal:",
+  "menu_prefix": "Prefix",
+  "menu_prefix_settings": "Prefixinstellingen...",
+  "lbl_prefix_lang": "Prefix:",
   "btn_apply": "Toepassen",
   "btn_cancel": "Annuleren",
 
