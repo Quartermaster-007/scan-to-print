@@ -672,6 +672,7 @@ class ScanToPrintApp:
             copies = self._copies.get()
         except tk.TclError:
             copies = 1
+            self._copies.set(1)
         filename = os.path.basename(file_to_print)
         self.status_text.set(i18n.t(
             "status_printing",

@@ -47,7 +47,8 @@ def _validate(s: dict) -> dict:
     """Clamp/correct settings values to valid ranges."""
     sc = s.get("scanner", {})
     try:
-        sc["threshold_ms"] = max(1, int(sc.get("threshold_ms", 100)))
+        val = int(sc.get("threshold_ms", 100))
+        sc["threshold_ms"] = val if val >= 1 else 100
     except (TypeError, ValueError):
         sc["threshold_ms"] = 100
 
