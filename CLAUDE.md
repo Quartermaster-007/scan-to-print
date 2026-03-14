@@ -22,23 +22,28 @@ Windows desktop app: scan a barcode → print the matching file from a selected 
 ## Project structure
 ```
 scan-to-print/
-  main.py            # Entry point, launches the GUI
-  app.py             # Main application window (Tkinter)
-  printer.py         # Printer listing and print job logic
-  scanner.py         # Global pynput keyboard listener (timing-based barcode detection)
-  settings.py        # Read/write settings.json in %APPDATA%/ScanToPrint/
-  speedcheck.py      # Scanner speed check window (measures threshold, saves to settings)
-  updater.py         # GitHub release check on startup + in-app self-update
-  version.py         # __version__ placeholder, overwritten by CI at build time
-  locales/           # UI string translations (en.json, nl.json, …) (planned)
-  build.py           # Branch-aware build script (outputs to dist/<branch>/)
-  test_scan.py       # Simulates USB scanner input for testing without hardware
-  CLAUDE.md          # This file — project briefing for Claude
-  FEATURES.md        # Feature planning and implementation notes
-  LICENSE            # MIT
-  requirements.txt   # Python dependencies
-  ScanToPrint.spec   # PyInstaller build spec (produces ScanToPrint.exe)
-  images/            # App icons (scan-to-print.ico, scan-to-print.png)
+  main.py                # Entry point, launches the GUI
+  app.py                 # Main application window (Tkinter)
+  printer.py             # Printer listing and print job logic
+  scanner.py             # Global pynput keyboard listener (timing-based barcode detection)
+  settings.py            # Read/write settings.json in %APPDATA%/ScanToPrint/
+  speedcheck.py          # Scanner speed check window (measures threshold, saves to settings)
+  updater.py             # GitHub release check on startup + in-app self-update
+  version.py             # __version__ placeholder, overwritten by CI at build time
+  i18n.py                # Internationalisation — loads strings from locales/<lang>.json
+  language_window.py     # Language selection dialog (UI language + language prefix)
+  tray.py                # System tray icon and right-click menu (pystray)
+  file_version_info.py   # Windows version resource embedded in the exe by PyInstaller
+  locales/               # UI string translations (en.json, nl.json, …)
+  build.py               # Branch-aware build script (outputs to dist/<branch>/)
+  test_scan.py           # Simulates USB scanner input for testing without hardware
+  CLAUDE.md              # This file — project briefing for Claude
+  FEATURES.md            # Feature planning and implementation notes
+  README.md              # User-facing documentation
+  LICENSE                # MIT
+  requirements.txt       # Python dependencies
+  ScanToPrint.spec       # PyInstaller build spec (produces ScanToPrint.exe)
+  images/                # App icons (scan-to-print.ico, scan-to-print.png)
 ```
 
 ## Feature workflow

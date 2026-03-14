@@ -6,17 +6,27 @@ Fill in the details under each feature before work begins. Leave a section blank
 
 ## Current state
 
-The core app is fully working:
-- Folder selection, printer selection, barcode input (USB scanner or keyboard)
-- Finds matching file by barcode name, disambiguates if multiple extensions exist
-- Prints via Windows ShellExecute
-- Persistent settings in `%APPDATA%\ScanToPrint\settings.json` ✅
-- Global keyboard listener (pynput) with timing-based barcode detection ✅
-- Pause/resume toggle + scanner speed check with auto-calibration ✅
+The app is fully implemented and distributed as a standalone Windows `.exe`:
+
+- **Folder & printer selection** — folder picker, printer dropdown, last-used values restored from `settings.json` on startup; falls back to Windows default printer
+- **File matching** — finds file in the selected folder whose name matches the scanned barcode (any extension); shows a picker dialog if multiple extensions exist
+- **Direct silent printing** — PDF pages rendered via `pypdfium2`, images via `Pillow`, both sent to the named printer through GDI (`win32print`); `SetDefaultPrinter` is never called
+- **Print copies** — spinbox (1–99), resets to 1 after each successful print
+- **Printer settings** — "Printer settings…" button opens Windows' native `DocumentProperties` dialog; the resulting DEVMODE is held for the session
+- **Global barcode listener** — `pynput` keyboard hook detects scanner input by timing (all chars within threshold, default 100ms); works when the app is minimised to the tray; pause/resume toggle and `●` indicator in the UI
+- **Scanner speed check** — modal window measures real inter-key timing and auto-suggests a threshold; saves to `settings.json`
+- **Print history / log** — in-app scrollable log (last 50 entries); timestamps, success and error lines; persists across language rebuilds
+- **Failure sound** — `winsound.MessageBeep` plays the system Exclamation sound when no matching file is found (no popup, scanner keeps working immediately)
+- **System tray** — minimising hides the window from the taskbar; tray icon shows scan state (green/grey dot); right-click menu: Restore, Pause/Resume, recent prefix languages, Exit; error balloon notifications when minimised
+- **UI language selection** — English and Dutch; strings loaded from `locales/<lang>.json` via `i18n.py`; language change is instant (no restart); saved to `settings.json`
+- **Language prefix** — optional ISO 3166-1 alpha-2 prefix prepended to barcode lookups (e.g. `EN-12345678.*`); prefix combobox in scan area; last 5 used codes in tray menu and Prefix menubar; saved to `settings.json`
+- **Persistent settings** — `%APPDATA%\ScanToPrint\settings.json`; nested groups: `workspace`, `ui`, `scanner`, `updates`, `prefix`; deep-merge on load
+- **GitHub update check** — daemon thread checks releases API on startup; in-app self-update (download + `.bat` swap) or manual download link; stable/prerelease channel toggle
+- **Packaged as `.exe`** — PyInstaller build via `build.py` and CI (`windows-latest`); published as GitHub Release; Windows version resource embedded via `file_version_info.py`
 
 ---
 
-## Print history / log
+## Print history / log ✅ Implemented
 
 Show a record of every scan attempt (barcode scanned, file matched, printer used, result, timestamp).
 
@@ -45,7 +55,7 @@ Show a record of every scan attempt (barcode scanned, file matched, printer used
 
 ---
 
-## Sound / visual feedback on scan
+## Sound / visual feedback on scan ✅ Implemented
 
 Play a sound or flash the window when a scan succeeds or fails — useful in noisy warehouse environments where the operator can't read the screen.
 
@@ -85,8 +95,8 @@ Settings to store, based on the core functionallity and not including any new fe
 - Last used folder and printer
 
 **Implementation notes:**
-- `settings.py` reads/writes `%APPDATA%\ScanToPrint\settings.json`
-- Keys: `folder`, `printer`, `window_width`, `window_height`, `auto_scan`, `threshold_ms`
+- `settings.py` reads/writes `%APPDATA%\ScanToPrint\settings.json` using nested groups with deep-merge so partial overrides don't wipe sibling defaults
+- Groups: `workspace` (folder, printer), `ui` (window_width, window_height, language), `scanner` (auto_scan, threshold_ms), `updates` (channel), `prefix` (enabled, language, recent)
 - Printer auto-selection order: saved → Windows default → first in list
 - File menu added with "Open settings file" (opens in default editor) and "Exit"
 - Window size is restored on startup; saved on close
@@ -268,7 +278,7 @@ User can select the language used in the app for all the strings and logs. Inclu
 
 ---
 
-## Language prefix
+## Language prefix ✅ Implemented
 
 User has to enable the feature that prefixes a iso 3166-1 alpha-2 country code to the scanned barcode. That way the folder can contain multiple language versions, and the app prints the selected language version. In the menubar, under 'Prefix', include a button for language selection that opens the same UI window as Language selection for UI. The left side will show UI languages and the right side should include a toggle for the feature and a list of languages to select. If the feature is turned on, then include a new dropdown menu in the scan section to quickly select a different language. The last five selected languages are saved to `settings.json` so they can be referenced in the right-click menu of the system tray and in the menubar under 'Prefix'.
 
