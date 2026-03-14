@@ -39,35 +39,32 @@ def _fetch_latest(channel: str) -> dict | None:
     download_url is only set when running as a frozen exe and the release has a
     ScanToPrint.exe asset attached.
     """
-    try:
-        if channel == "prerelease":
-            resp = requests.get(_API_ALL, headers=_HEADERS, timeout=10)
-            resp.raise_for_status()
-            releases = [r for r in resp.json() if not r.get("draft")]
-            if not releases:
-                return None
-            latest = max(releases, key=lambda r: _parse_version(r["tag_name"]))
-        else:
-            resp = requests.get(_API_STABLE, headers=_HEADERS, timeout=10)
-            resp.raise_for_status()
-            latest = resp.json()
-            if latest.get("draft"):
-                return None
+    if channel == "prerelease":
+        resp = requests.get(_API_ALL, headers=_HEADERS, timeout=10)
+        resp.raise_for_status()
+        releases = [r for r in resp.json() if not r.get("draft")]
+        if not releases:
+            return None
+        latest = max(releases, key=lambda r: _parse_version(r["tag_name"]))
+    else:
+        resp = requests.get(_API_STABLE, headers=_HEADERS, timeout=10)
+        resp.raise_for_status()
+        latest = resp.json()
+        if latest.get("draft"):
+            return None
 
-        download_url = None
-        if _IS_FROZEN:
-            for asset in latest.get("assets", []):
-                if asset["name"].lower() == "scantoprint.exe":
-                    download_url = asset["browser_download_url"]
-                    break
+    download_url = None
+    if _IS_FROZEN:
+        for asset in latest.get("assets", []):
+            if asset["name"].lower() == "scantoprint.exe":
+                download_url = asset["browser_download_url"]
+                break
 
-        return {
-            "tag": latest["tag_name"],
-            "url": latest["html_url"],
-            "download_url": download_url,
-        }
-    except Exception:
-        return None
+    return {
+        "tag": latest["tag_name"],
+        "url": latest["html_url"],
+        "download_url": download_url,
+    }
 
 
 def _launch_swap_script(new_exe: str, current_exe: str) -> None:
@@ -130,6 +127,7 @@ def _do_self_update(root: tk.Tk, download_url: str, tag: str) -> None:
     def _on_done() -> None:
         dlg.destroy()
         _launch_swap_script(new_exe, current_exe)
+        root.destroy()
         os._exit(0)
 
     def _on_error(msg: str) -> None:
@@ -207,8 +205,18 @@ def check_for_updates(
     silent=False — also show "up to date" if nothing newer found (manual check).
     """
     def _run() -> None:
-        result = _fetch_latest(channel)
+        try:
+            result = _fetch_latest(channel)
+        except Exception:
+            if not silent:
+                root.after(0, lambda: messagebox.showwarning(
+                    i18n.t("updater_failed_title"),
+                    i18n.t("updater_check_failed_msg"),
+                ))
+            return
         if result is None:
+            if not silent:
+                root.after(0, _show_up_to_date)
             return
         if _parse_version(result["tag"]) > _parse_version(current_version):
             root.after(

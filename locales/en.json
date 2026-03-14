@@ -107,6 +107,7 @@
   "btn_later": "Later",
   "updater_failed_title": "Update failed",
   "updater_failed_msg": "Download failed:\n{error}\n\nPlease download the update manually.",
+  "updater_check_failed_msg": "Could not check for updates. Please check your internet connection.",
   "updater_uptodate_title": "No updates",
   "updater_uptodate_msg": "You are up to date.",
 

@@ -107,6 +107,7 @@
   "btn_later": "Later",
   "updater_failed_title": "Update mislukt",
   "updater_failed_msg": "Downloaden mislukt:\n{error}\n\nDownload de update handmatig.",
+  "updater_check_failed_msg": "Kan niet controleren op updates. Controleer uw internetverbinding.",
   "updater_uptodate_title": "Geen updates",
   "updater_uptodate_msg": "U gebruikt de nieuwste versie.",
 

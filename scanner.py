@@ -91,9 +91,10 @@ class BarcodeScanner:
                     if char:
                         self._buffer.append(char)
                 except AttributeError:
-                    # Special key (shift, ctrl, etc.) — reset buffer
-                    self._buffer.clear()
-                    self._last_time = None
+                    # Modifier keys (Shift, Ctrl, Alt, etc.) — ignore silently
+                    # so uppercase characters in barcodes are not dropped.
+                    # pynput fires Shift separately before the uppercase char.
+                    pass
 
     def stop(self):
         if self._listener:

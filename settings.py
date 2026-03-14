@@ -43,6 +43,31 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return result
 
 
+def _validate(s: dict) -> dict:
+    """Clamp/correct settings values to valid ranges."""
+    sc = s.get("scanner", {})
+    try:
+        val = int(sc.get("threshold_ms", 100))
+        sc["threshold_ms"] = val if val >= 1 else 100
+    except (TypeError, ValueError):
+        sc["threshold_ms"] = 100
+
+    ui = s.get("ui", {})
+    for key in ("window_width", "window_height"):
+        try:
+            ui[key] = max(0, int(ui.get(key, 0)))
+        except (TypeError, ValueError):
+            ui[key] = 0
+    if not isinstance(ui.get("language"), str) or not ui["language"]:
+        ui["language"] = "en"
+
+    up = s.get("updates", {})
+    if up.get("channel") not in ("stable", "prerelease"):
+        up["channel"] = "stable"
+
+    return s
+
+
 def load() -> dict:
     """Return settings dict, falling back to defaults for missing keys."""
     try:
@@ -50,7 +75,7 @@ def load() -> dict:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         data = {}
-    return _deep_merge(_DEFAULTS, data)
+    return _validate(_deep_merge(_DEFAULTS, data))
 
 
 def save(s: dict) -> None:

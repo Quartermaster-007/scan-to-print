@@ -101,22 +101,25 @@ def _print_image(file_path: str, printer_name: str, copies: int = 1, devmode=Non
     from PIL import Image, ImageWin
 
     img = Image.open(file_path).convert("RGB")
-    pdc = _make_printer_dc(printer_name, devmode)
-
-    printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
-    printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
-    draw_w, draw_h = _fit_rect(img.width, img.height, printable_w, printable_h)
-    dib = ImageWin.Dib(img)
-
-    pdc.StartDoc(os.path.basename(file_path))
     try:
-        for _ in range(copies):
-            pdc.StartPage()
-            dib.draw(pdc.GetHandleOutput(), (0, 0, draw_w, draw_h))
-            pdc.EndPage()
-        pdc.EndDoc()
-    except Exception:
-        pdc.AbortDoc()
-        raise
+        pdc = _make_printer_dc(printer_name, devmode)
+        try:
+            printable_w = pdc.GetDeviceCaps(win32con.HORZRES)
+            printable_h = pdc.GetDeviceCaps(win32con.VERTRES)
+            draw_w, draw_h = _fit_rect(img.width, img.height, printable_w, printable_h)
+            dib = ImageWin.Dib(img)
+
+            pdc.StartDoc(os.path.basename(file_path))
+            try:
+                for _ in range(copies):
+                    pdc.StartPage()
+                    dib.draw(pdc.GetHandleOutput(), (0, 0, draw_w, draw_h))
+                    pdc.EndPage()
+                pdc.EndDoc()
+            except Exception:
+                pdc.AbortDoc()
+                raise
+        finally:
+            pdc.DeleteDC()
     finally:
-        pdc.DeleteDC()
+        img.close()
