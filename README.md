@@ -17,7 +17,7 @@ pip install -r requirements.txt
 - `pynput` — global keyboard listener for barcode input
 - `pypdfium2` — PDF rendering and direct printing
 - `Pillow` — image rendering and direct printing
-- `pystray` — system tray icon (planned)
+- `pystray` — system tray icon and right-click menu
 - `requests` — GitHub update check and in-app self-update
 - `pyinstaller` — for building a standalone `.exe`
 
@@ -40,6 +40,19 @@ If multiple files share the same barcode name (different extensions), a dialog l
 
 Settings (folder, printer, language, window size, auto-scan state, scanner threshold) are saved automatically to `%APPDATA%\ScanToPrint\settings.json`.
 
+## System tray
+
+Minimising the window hides the app from the taskbar and moves it to the Windows system tray. The tray icon shows the current auto-scan state (green dot = active, grey dot = paused).
+
+Right-click the tray icon for quick actions:
+
+| Item | Description |
+|------|-------------|
+| Restore | Opens the main window |
+| Pause / Resume auto-scan | Toggles the global barcode listener |
+| Recent prefix languages | Switch the active language prefix (shown when prefix feature is enabled) |
+| Exit | Quits the app |
+
 ## Scanner menu
 
 | Item | Description |
@@ -50,6 +63,12 @@ Settings (folder, printer, language, window size, auto-scan state, scanner thres
 ## Language
 
 The UI language is configurable under **File → Preferences → Language…**. English and Dutch are included. The selected language is saved to `settings.json` and restored on next launch.
+
+## Language prefix
+
+Enable the language prefix feature under **Prefix → Language prefix…**. When enabled, an ISO 3166-1 alpha-2 country code is prepended to every scanned barcode before file lookup — e.g. barcode `12345678` with prefix `EN` looks for `EN-12345678.*` in the folder.
+
+A dropdown appears in the scan area for quick prefix switching. The last five used prefix languages are saved to `settings.json` and accessible from the tray right-click menu.
 
 ## Updates
 
@@ -67,22 +86,24 @@ The update channel (**Stable releases** or **Pre-releases**) is configurable und
 
 ```
 scan-to-print/
-  main.py            # Entry point — run this to launch the app
-  app.py             # Main Tkinter window and UI logic
-  printer.py         # Printer enumeration and print job (pywin32 + pypdfium2 + Pillow)
-  scanner.py         # Global pynput keyboard listener (timing-based detection)
-  settings.py        # Persistent settings in %APPDATA%/ScanToPrint/settings.json
-  speedcheck.py      # Scanner speed check window
-  updater.py         # GitHub release check and in-app self-update
-  i18n.py            # Internationalisation — loads strings from locales/<lang>.json
-  language_window.py # Language selection dialog
-  locales/           # UI string translations (en.json, nl.json)
-  version.py         # __version__ placeholder, overwritten by CI at build time
-  build.py           # Build script — outputs to dist/ with version+branch in the exe name
-  test_scan.py       # Simulates USB scanner input for testing without hardware
-  requirements.txt   # Python dependencies
-  ScanToPrint.spec   # PyInstaller build spec
-  images/            # App icons
+  main.py                # Entry point — run this to launch the app
+  app.py                 # Main Tkinter window and UI logic
+  printer.py             # Printer enumeration and print job (pywin32 + pypdfium2 + Pillow)
+  scanner.py             # Global pynput keyboard listener (timing-based detection)
+  settings.py            # Persistent settings in %APPDATA%/ScanToPrint/settings.json
+  speedcheck.py          # Scanner speed check window
+  updater.py             # GitHub release check and in-app self-update
+  i18n.py                # Internationalisation — loads strings from locales/<lang>.json
+  language_window.py     # Language selection dialog (UI language + language prefix)
+  tray.py                # System tray icon and right-click menu
+  file_version_info.py   # Windows version resource embedded in the exe
+  locales/               # UI string translations (en.json, nl.json)
+  version.py             # __version__ placeholder, overwritten by CI at build time
+  build.py               # Build script — outputs to dist/ with version+branch in the exe name
+  test_scan.py           # Simulates USB scanner input for testing without hardware
+  requirements.txt       # Python dependencies
+  ScanToPrint.spec       # PyInstaller build spec
+  images/                # App icons
 ```
 
 ## Building a standalone .exe
